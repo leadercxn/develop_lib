@@ -1042,9 +1042,9 @@ int bk953x_config_init(bk953x_object_t *p_bk953x_object)
     
         trace_debug("bk953x_soft_reset  done\n\r");
 
-        /**
-         * 先粗暴的配置
-         */
+/**
+ * 先粗暴的配置
+ */
 #if 1
         MID_BK953X_READ(0x38, &value);
         value &= 0x00ffffff;
