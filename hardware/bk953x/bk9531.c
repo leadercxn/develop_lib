@@ -27,22 +27,6 @@
     }                                   \
 }\
 
-#define MID_BK953X_WRITE_READ(reg,p_data)    \
-{                                            \
-    err_code = mid_bk953x_write_one_reg(&p_bk953x_object->mid_bk953x_object, BK953X_DEVICE_ID, reg, p_data);   \
-    if(err_code)                        \
-    {                                   \
-        trace_error("mid_bk953x_write reg 0x%02x  error %d\n\r",reg ,err_code);                                \
-    }                                   \
-    \
-    err_code = mid_bk953x_read_one_reg(&p_bk953x_object->mid_bk953x_object, BK953X_DEVICE_ID, reg, p_data);   \
-    if(err_code)                        \
-    {                                   \
-        trace_error("mid_bk953x_read reg 0x%02x error %d\n\r", reg ,err_code);                         \
-    }                                   \
-}\
-
-
 bk953x_reg_value_t g_bk9531_init_config[] = {
     {0x00 , 0x1C440C88},
     {0x01 , 0x04CF0057},
@@ -83,6 +67,47 @@ bk953x_reg_value_t g_bk9531_init_config[] = {
     {0x72 , 0x00000000},
     {0x77 , 0x00070051},
     {0x78 , 0x00000008},
+};
+
+bk953x_reg_value_t g_bk9531_init_config_v1_4[] = {
+    {0x00, 0x1E440C88},
+    {0x01, 0x04CF0057},
+    {0x02, 0x8990E02F},
+    {0x03, 0x341206FF},
+    {0x04, 0x53880044},
+    {0x05, 0x00280380},
+    {0x06, 0x5BEDF800},
+    {0x07, 0x1C400000},
+    {0x08, 0x00080100},
+    {0x09, 0x00007EFF},
+    {0x0A, 0xCF2A4040},
+    {0x0B, 0x0006C3FF},
+    {0x0C, 0x00000008},
+//  {0x0D, 0x3A980000},     //BK官方寄存器配置
+    {0x0D, 0x4D260000},    //for cxn test , 632MHz
+
+    {0x30, 0x28282828},
+    {0x31, 0xD0000028},
+    {0x32, 0x10060064},
+    {0x33, 0x48808D82},
+    {0x34, 0x0B021108},
+    {0x35, 0x70500080},
+    {0x36, 0x0F801E04},
+    {0x37, 0x00000000},
+    {0x38, 0x00000000},    //ID_code
+    {0x39, 0x03D7D5F7},    //Preamble
+    {0x3A, 0xC0250074},
+    {0x3B, 0x9525003A},
+    {0x3C, 0x9525003B},
+    {0x3D, 0x9525003C},
+    {0x3E, 0x00F867C3},
+    {0x3F, 0x800F0000},
+
+    {0x70, 0x00009531},
+    {0x71, 0x18A40810},
+    {0x72, 0x00000000},
+    {0x77, 0x00070051},
+    {0x78, 0x00000008},
 };
 
 int bk9531_tx_trigger(bk953x_object_t *p_bk953x_object)
@@ -210,14 +235,7 @@ int bk9531_tx_mic_rssi_get(bk953x_object_t *p_bk953x_object, uint32_t *p_data)
     IS_NULL(p_bk953x_object);
     IS_NULL(p_data);
 
-    if(p_bk953x_object->chip_id == BK9532_CHID_ID)
-    {
-        MID_BK953X_READ(0x7C, &value);
-    }
-    else if(p_bk953x_object->chip_id == BK9531_CHID_ID)
-    {
-        MID_BK953X_READ(0x3F, p_data);
-    }
+    MID_BK953X_READ(0x3F, p_data);
 
     return err_code;
 } 
@@ -248,4 +266,53 @@ int bk9531_config_init(bk953x_object_t *p_bk953x_object)
         trace_debug("bk9531_config_init  done\n\r");
 
     return err_code;
+}
+
+int bk9531_chip_id_get(bk953x_object_t *p_bk953x_object)
+{
+    uint32_t value = 0;
+    uint8_t rty = 0;
+
+    int err_code = 0;
+
+    /* 重试 5 次 */
+    for(rty = 0; rty < 5; rty++)
+    {
+        err_code = mid_bk953x_read_one_reg(&p_bk953x_object->mid_bk953x_object, BK953X_DEVICE_ID, REG_CHIP_ID, &value);
+        if(err_code == 0)
+        {
+            p_bk953x_object->chip_id = value;
+            break;
+        }
+
+        delay_ms(50);
+    }
+
+    trace_debug("bk953x_chip_id_get err_code = %d , chip_id = 0x%08x\n\r",err_code,p_bk953x_object->chip_id);
+    return err_code;
+}
+
+void bk9531_res_init(bk953x_object_t *p_bk953x_object)
+{
+    mid_bk953x_res_init(&p_bk953x_object->mid_bk953x_object);
+}
+
+int bk9531_reg_printf(bk953x_object_t *p_bk953x_object)
+{
+    int err_code = 0;
+
+    uint8_t i = 0;
+    uint8_t reg = 0;
+    uint32_t reg_value = 0;
+
+    for(i = 0; i < (ARRAY_SIZE(g_bk9531_init_config)); i++)
+    {
+        reg = g_bk9531_init_config[i].reg;
+
+        MID_BK953X_READ(reg,&reg_value);
+
+        trace_debug("bk9531 reg = 0x%02x , reg_value = 0x%08x\n\r",reg, reg_value);
+    }
+
+    return 0;
 }
