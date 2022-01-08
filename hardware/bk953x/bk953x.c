@@ -28,8 +28,8 @@
     {                                   \
         trace_error("mid_bk953x_write reg 0x%02x  error %d\n\r",reg ,err_code);                         \
         return err_code;               \
-    }                                   \
-}                                       \
+    }                                  \
+}                                      \
 
 
 bk953x_reg_value_t g_bk9532_init_config[54] = {
@@ -49,24 +49,24 @@ bk953x_reg_value_t g_bk9532_init_config[54] = {
     {0x0C , 0x00000008 },
     {0x0D , 0x3A9B69D0 },
 
-    {0x2C , 0x00000000 },
-    {0x2D , 0x000000FF },
-    {0x2E , 0xF128A000 },
-    {0x2F , 0x00002E91 },
+    {0x2C , 0x00000000 },   //与官方pdf不一样
+    {0x2D , 0x000000FF },   //与官方pdf不一样
+    {0x2E , 0xF128A000 },   //与官方pdf不一样
+    {0x2F , 0x00002E91 },   //与官方pdf不一样
 
-    {0x30 , 0x40404040 },
+    {0x30 , 0x40404040 },   //与官方pdf不一样
 
 #ifdef ENABLE_GPIO4_MUTE_FUN
-    {0x31 , 0xC1080000 },
+    {0x31 , 0xC1080000 },   
 #else
-    {0x31 , 0xC1080071 },//
+    {0x31 , 0xC1080071 },// //与官方pdf不一样
 #endif
 
-    {0x32 , 0x20FF0F09 },
-    {0x33 , 0x00900080 },
-    {0x34 , 0xFFFF010E },
-    {0x35 , 0x09000000 },
-    {0x36 , 0x0C6060DD },
+    {0x32 , 0x20FF0F09 },   //与官方pdf不一样
+    {0x33 , 0x00900080 },   //与官方pdf不一样
+    {0x34 , 0xFFFF010E },   //与官方pdf不一样
+    {0x35 , 0x09000000 },   //与官方pdf不一样
+    {0x36 , 0x0C6060DD },   //与官方pdf不一样
 
     {0x37 , 0x3E009800 },
     {0x38 , 0x40D7D5F7 },   //Preamble
@@ -77,13 +77,13 @@ bk953x_reg_value_t g_bk9532_init_config[54] = {
     {0x3D , 0x00006629 },
 
     {0x3E , 0x1F554FEE },
-    {0x3F , 0x8D7A002F },
+    {0x3F , 0x8D7A002F },   //与官方pdf不一样
 
-    {0x59 , 0x43000000 },
+    {0x59 , 0x43000000 },   
     {0x5A , 0x00000000 },
     {0x5B , 0x00000000 },
-    {0x5C , 0x2CD50000 },
-    {0x5D , 0x1FFF3FFF },
+    {0x5C , 0x2CD50000 },   //与官方pdf不一样
+    {0x5D , 0x1FFF3FFF },   //与官方pdf不一样
     {0x5E , 0x00000F00 },//
 
     {0x70 , 0x00089532 },

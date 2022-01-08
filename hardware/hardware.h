@@ -5,7 +5,8 @@
 #define __HARDWARE_H
 
 #include "band_freq.h"
-#include "bk953x.h"
+//#include "bk953x.h"
+#include "bk9531.h"
 #include "st7789.h"
 #include "ht1621.h"
 #include "seg_code.h"
