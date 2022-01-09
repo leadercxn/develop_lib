@@ -26,7 +26,9 @@
     }                                   \
 }\
 
-
+/**
+ * V2.4 配置
+ */
 bk953x_reg_value_t g_bk9532_init_config[54] = {
 //寄存器 0x00 ~ 0x0D 是只写寄存器，所以全局可以使用
     {0x00 , 0xDFFFFFF8 },
@@ -50,19 +52,16 @@ bk953x_reg_value_t g_bk9532_init_config[54] = {
     {0x2F , 0x00002E91 },   //与官方pdf不一样
 
     {0x30 , 0x40404040 },   //与官方pdf不一样
-
 #ifdef BK953X_GPIO4_MUTE_FUN
     {0x31 , 0xC1080000 },   
 #else
     {0x31 , 0xC1080071 },// //与官方pdf不一样
 #endif
-
     {0x32 , 0x20FF0F09 },   //与官方pdf不一样
     {0x33 , 0x00900080 },   //与官方pdf不一样
     {0x34 , 0xFFFF010E },   //与官方pdf不一样
     {0x35 , 0x09000000 },   //与官方pdf不一样
     {0x36 , 0x0C6060DD },   //与官方pdf不一样
-
     {0x37 , 0x3E009800 },
     {0x38 , 0x40D7D5F7 },   //Preamble
     {0x39 , 0x00000000 },   //ID_code
@@ -70,7 +69,6 @@ bk953x_reg_value_t g_bk9532_init_config[54] = {
     {0x3B , 0x6D000800 },//
     {0x3C , 0x0040FFDC },
     {0x3D , 0x00006629 },
-
     {0x3E , 0x1F554FEE },
     {0x3F , 0x8D7A002F },   //与官方pdf不一样
 
@@ -97,6 +95,9 @@ bk953x_reg_value_t g_bk9532_init_config[54] = {
     {0x7D , 0x0032A8FF },
 };
 
+/**
+ * V1.4 pdf配置
+ */
 bk953x_reg_value_t g_bk9532_init_config_v1_4[53] = {
 //寄存器 0x00 ~ 0x0D 是只写寄存器，所以全局可以使用
     {0x00 , 0xDFFFFFF8 },
@@ -266,9 +267,7 @@ static int bk9532_rx_calibration_trigger(bk953x_object_t *p_bk953x_object)
     delay_ms(2);
 
     /* load the default RF loop LDO voltage */
-    SET_BIT(g_bk9532_init_config[6].value, 29);
     SET_BIT(g_bk9532_init_config[6].value, 30);
-    SET_BIT(g_bk9532_init_config[6].value, 31);
 
     MID_BK953X_WRITE(0x06, &g_bk9532_init_config[6].value);
 
@@ -372,11 +371,11 @@ int bk9532_rx_plc_enable(bk953x_object_t *p_bk953x_object, bool enable_status)
 
     MID_BK953X_READ(0x3B, &value);
 
-    CLR_BIT(value, 19);
+    CLR_BIT(value, 11);
 
     if(enable_status)
     {
-        SET_BIT(value,19);
+        SET_BIT(value,11);
     }
 
     MID_BK953X_WRITE(0x3B, &value);
@@ -435,7 +434,7 @@ int bk9532_rx_volume_set(bk953x_object_t *p_bk953x_object, uint8_t vol)
     /**
      * eq_gain & duf_gain
      */
-    value &= ~ 0x3ff;
+    value &= ~ 0x1Ful;
 
     /**
      * duf_gain
@@ -445,6 +444,7 @@ int bk9532_rx_volume_set(bk953x_object_t *p_bk953x_object, uint8_t vol)
     /**
      * eq_gain
      */
+    value &= ~(0x1Ful << 5);
     value |= ((uint32_t) vol << 5);
 
     MID_BK953X_WRITE(0x32, &value);
@@ -479,11 +479,11 @@ int bk9532_mute_enable(bk953x_object_t *p_bk953x_object, bool enable_status)
 #ifdef  BK953X_GPIO4_MUTE_FUN
     MID_BK953X_READ(0x31, &value);
 
-    CLR_BIT(value, 9);
+    CLR_BIT(value, 2);
 
     if(!enable_status)
     {
-        SET_BIT(value, 9);
+        SET_BIT(value, 2);
     }
 
     MID_BK953X_WRITE(0x31, &value);
@@ -528,80 +528,73 @@ int bk9532_rx_i2s_open(bk953x_object_t *p_bk953x_object, bk953x_pcm_config_t *p_
     IS_NULL(p_bk953x_object);
     IS_NULL(p_pcm_config);
 
-    if(p_bk953x_object->chip_id == BK9532_CHID_ID)
+    /* 0x30 */
+    MID_BK953X_READ(0x30, &value);
+    value &= 0xff000000;
+
+    if(p_pcm_config->mode == PCM_MASTER)
     {
-        /* 0x30 */
-        MID_BK953X_READ(0x30, &value);
-
-        if(p_pcm_config->mode == PCM_MASTER)
-        {
-            p_pcm_config->bclk = PCM_SCK_O;
-            p_pcm_config->lrclk = PCM_LRCK_O;
-            SET_BIT(value, 6);
-            SET_BIT(value, 26);
-        }
-        else
-        {
-            p_pcm_config->bclk = PCM_SCK_I;
-            p_pcm_config->lrclk = PCM_LRCK_I;
-            value |= 0x00007D7D;
-        }
-
-        if(p_pcm_config->data == PCM_SDA_I)
-        {
-            value |= 0x007D0000;
-        }
-        else
-        {
-            value |= 0x00400000;
-        }
-
-        MID_BK953X_WRITE(0x30, &value);
-
-        /* 0x31 */
-        MID_BK953X_READ(0x31, &value);
-
-        value &= 0xfffe00ff;
-        value |= (((uint32_t)p_pcm_config->data << 14)|((uint32_t)p_pcm_config->bclk << 11)|((uint32_t)p_pcm_config->lrclk << 8));
-
-        MID_BK953X_WRITE(0x31, &value);
-
-        /* 0x36 */
-        MID_BK953X_READ(0x36, &value);
-
-        value &= 0x07ffffff;
-        value |= (((uint32_t)p_pcm_config->mode << 27)|(1 << 26));
-
-        MID_BK953X_WRITE(0x36, &value);
-
-        /* 0x37 */
-        value = 0x3E009800;
-        MID_BK953X_WRITE(0x37, &value);
-
-        /* 0x3F */
-        MID_BK953X_READ(0x3F, &value);
-
-        if(p_pcm_config->channel == PCM_LEFT)
-        {
-            SET_BIT(value, 4);
-            SET_BIT(value, 3);
-        }
-        else if(p_pcm_config->channel == PCM_RIGHT)
-        {
-            SET_BIT(value, 4);
-            CLR_BIT(value, 3);
-        }
-        else
-        {
-            CLR_BIT(value, 4);
-        }
-
-        MID_BK953X_WRITE(0x3F, &value);
+        p_pcm_config->bclk = PCM_SCK_O;
+        p_pcm_config->lrclk = PCM_LRCK_O;
+        value |= 0x00004040;
     }
     else
     {
-
+        p_pcm_config->bclk = PCM_SCK_I;
+        p_pcm_config->lrclk = PCM_LRCK_I;
+        value |= 0x00007D7D;
     }
+
+    if(p_pcm_config->data == PCM_SDA_I)
+    {
+        value |= 0x007D0000;
+    }
+    else
+    {
+        value |= 0x00400000;
+    }
+
+    MID_BK953X_WRITE(0x30, &value);
+
+    /* 0x31 */
+    MID_BK953X_READ(0x31, &value);
+
+    value &= 0xfffe00ff;
+    value |= (((uint32_t)p_pcm_config->data << 14)|((uint32_t)p_pcm_config->bclk << 11)|((uint32_t)p_pcm_config->lrclk << 8));
+
+    MID_BK953X_WRITE(0x31, &value);
+
+    /* 0x36 */
+    MID_BK953X_READ(0x36, &value);
+
+    value &= 0x07ffffff;
+    value |= (((uint32_t)p_pcm_config->mode << 27)|(1 << 26));
+
+    MID_BK953X_WRITE(0x36, &value);
+
+    /* 0x37 */
+    value = 0x3E009800;
+    MID_BK953X_WRITE(0x37, &value);
+
+    /* 0x3F */
+    MID_BK953X_READ(0x3F, &value);
+
+    if(p_pcm_config->channel == PCM_LEFT)
+    {
+        SET_BIT(value, 4);
+        SET_BIT(value, 3);
+    }
+    else if(p_pcm_config->channel == PCM_RIGHT)
+    {
+        SET_BIT(value, 4);
+        CLR_BIT(value, 3);
+    }
+    else
+    {
+        CLR_BIT(value, 4);
+    }
+
+    MID_BK953X_WRITE(0x3F, &value);
 
     return err_code;
 }
@@ -761,11 +754,15 @@ int bk9532_config_init(bk953x_object_t *p_bk953x_object)
         }
     }
 
-    delay_ms(100);
+    delay_ms(150);
+
+    bk9532_reg_printf(p_bk953x_object);
 
     err_code = bk9532_soft_reset(p_bk953x_object);
 
     trace_debug("bk953x_soft_reset  done\n\r");
+
+    bk9532_reg_printf(p_bk953x_object);
 
 /**
  * 先粗暴的配置
@@ -828,6 +825,9 @@ int bk9532_config_init(bk953x_object_t *p_bk953x_object)
 
         bk9532_rx_afc_enable(p_bk953x_object,false);
     }
+
+    trace_debug("bk9532 cfg done  done\n\r");
+    bk9532_reg_printf(p_bk953x_object);
 #endif
 
     return err_code;
