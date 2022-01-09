@@ -275,6 +275,38 @@ static int bk9532_rx_calibration_trigger(bk953x_object_t *p_bk953x_object)
     return err_code;
 }
 
+/**
+ * @brief  bk953x设置频点的信道
+ * 
+ */
+int bk9532_freq_chan_set(bk953x_object_t *p_bk953x_object, freq_chan_object_t *p_freq_chan_object)
+{
+    IS_NULL(p_bk953x_object);
+    IS_NULL(p_freq_chan_object);
+
+    p_bk953x_object->band_type = p_freq_chan_object->band_type;
+    p_bk953x_object->freq_chan_index = p_freq_chan_object->chan_index;
+
+    int err_code = 0;
+
+    /* bit[15:13] = 001, 6分频 */
+    CLR_BIT(g_bk9532_init_config[3].value, 15);
+    CLR_BIT(g_bk9532_init_config[3].value, 14);
+    SET_BIT(g_bk9532_init_config[3].value, 13);
+
+    /* bit[21:20] = 01, U段 */
+    CLR_BIT(g_bk9532_init_config[3].value, 21);
+    SET_BIT(g_bk9532_init_config[3].value, 20);
+
+    MID_BK953X_WRITE(0x03, &g_bk9532_init_config[3].value);
+    MID_BK953X_WRITE(0x0D, &p_freq_chan_object->reg_value);
+
+    bk9532_rx_calibration_trigger(p_bk953x_object);
+    bk9532_rx_reset(p_bk953x_object);
+    bk9532_rx_plc_reset(p_bk953x_object);
+
+    return err_code;
+}
 
 /**
  * @brief  bk953x设置接收天线的模式
@@ -349,7 +381,7 @@ int bk9532_rx_plc_enable(bk953x_object_t *p_bk953x_object, bool enable_status)
 
     MID_BK953X_WRITE(0x3B, &value);
 
-    bk953x_rx_plc_reset(p_bk953x_object);
+    bk9532_rx_plc_reset(p_bk953x_object);
 
     return err_code;
 }
@@ -731,7 +763,7 @@ int bk9532_config_init(bk953x_object_t *p_bk953x_object)
 
     delay_ms(100);
 
-    err_code = bk953x_soft_reset(p_bk953x_object);
+    err_code = bk9532_soft_reset(p_bk953x_object);
 
     trace_debug("bk953x_soft_reset  done\n\r");
 
@@ -749,9 +781,9 @@ int bk9532_config_init(bk953x_object_t *p_bk953x_object)
     freq_chan_obj.chan_index = 1;
     freq_chan_obj.reg_value = 0x4D2B1EB8;   //632Mhz
 
-    bk953x_freq_chan_set(p_bk953x_object, &freq_chan_obj);
+    bk9532_freq_chan_set(p_bk953x_object, &freq_chan_obj);
 
-    bk953x_rx_afc_enable(p_bk953x_object,false);
+    bk9532_rx_afc_enable(p_bk953x_object,false);
 
     uint8_t xtal_tab[5] = {31,43,55,67,79};           //频偏测试表格
 
@@ -776,7 +808,7 @@ int bk9532_config_init(bk953x_object_t *p_bk953x_object)
             trace_debug("frame_err_ind success , i = %d, rec_spec_data = 0x%02x, value = 0x%08x\n\r",i , rec_spec_data,value);
 
             delay_ms(60);
-            bk953x_rx_afc_enable(p_bk953x_object,true);
+            bk9532_rx_afc_enable(p_bk953x_object,true);
             break;
         }
     }
@@ -787,14 +819,14 @@ int bk9532_config_init(bk953x_object_t *p_bk953x_object)
     }
     else
     {
-        bk953x_rx_volume_set(p_bk953x_object, 2);
-        bk953x_rx_antena_set(p_bk953x_object, DA_AUTO);
+        bk9532_rx_volume_set(p_bk953x_object, 2);
+        bk9532_rx_antena_set(p_bk953x_object, DA_AUTO);
 
-        bk953x_freq_chan_set(p_bk953x_object, &freq_chan_obj);
+        bk9532_freq_chan_set(p_bk953x_object, &freq_chan_obj);
 
-        bk953x_rx_plc_enable(p_bk953x_object, true);
+        bk9532_rx_plc_enable(p_bk953x_object, true);
 
-        bk953x_rx_afc_enable(p_bk953x_object,false);
+        bk9532_rx_afc_enable(p_bk953x_object,false);
     }
 #endif
 
@@ -840,11 +872,11 @@ int bk9532_reg_printf(bk953x_object_t *p_bk953x_object)
 
     for(i = 0; i < (ARRAY_SIZE(g_bk9532_init_config)); i++)
     {
-        reg = g_bk9531_init_config[i].reg;
+        reg = g_bk9532_init_config[i].reg;
 
         MID_BK953X_READ(reg,&reg_value);
 
-        trace_debug("bk9531 reg = 0x%02x , reg_value = 0x%08x\n\r",reg, reg_value);
+        trace_debug("bk9532 reg = 0x%02x , reg_value = 0x%08x\n\r",reg, reg_value);
     }
 
     return 0;
