@@ -27,6 +27,9 @@
     }                                   \
 }\
 
+/**
+ * V2.4 配置
+ */
 bk953x_reg_value_t g_bk9531_init_config[] = {
     {0x00 , 0x1C440C88},
     {0x01 , 0x04CF0057},
@@ -56,8 +59,8 @@ bk953x_reg_value_t g_bk9531_init_config[] = {
     {0x38 , 0x00000000},    //ID_code
     {0x39 , 0x03D7D5F7},    //Preamble
     {0x3A , 0xC0250074},
-    {0x3B , 0x9525003B},
-    {0x3C , 0x9525003C},
+    {0x3B , 0x9525003A},
+    {0x3C , 0x9525003B},
     {0x3D , 0x9525003C},
     {0x3E , 0x00F867C3},
     {0x3F , 0x800F0000},
@@ -69,6 +72,9 @@ bk953x_reg_value_t g_bk9531_init_config[] = {
     {0x78 , 0x00000008},
 };
 
+/**
+ * V1.4 pdf配置
+ */
 bk953x_reg_value_t g_bk9531_init_config_v1_4[] = {
     {0x00, 0x1E440C88},
     {0x01, 0x04CF0057},
@@ -83,7 +89,7 @@ bk953x_reg_value_t g_bk9531_init_config_v1_4[] = {
     {0x0A, 0xCF2A4040},
     {0x0B, 0x0006C3FF},
     {0x0C, 0x00000008},
-//  {0x0D, 0x3A980000},     //BK官方寄存器配置
+//  {0x0D, 0x3A980000},    //BK官方寄存器配置
     {0x0D, 0x4D260000},    //for cxn test , 632MHz
 
     {0x30, 0x28282828},
@@ -119,8 +125,7 @@ int bk9531_tx_trigger(bk953x_object_t *p_bk953x_object)
 
     uint32_t reg_val_bak = g_bk9531_init_config[0x0A].value;
 
-    g_bk9531_init_config->value &= 0xFFFFFF00;
-
+    g_bk9531_init_config[0x0A].value &= 0xFFFFFF00;
     MID_BK953X_WRITE(0x0A, &g_bk9531_init_config[0x0A].value);
 
     //Set ddf_en=0 for tx_trigger
@@ -137,6 +142,7 @@ int bk9531_tx_trigger(bk953x_object_t *p_bk953x_object)
     MID_BK953X_READ(0x39, &value);
     CLR_BIT(value,24);
     MID_BK953X_WRITE(0x39, &value);
+
 
     //Enable calibration clock
     SET_BIT(g_bk9531_init_config[7].value, 25);
@@ -159,13 +165,13 @@ int bk9531_tx_trigger(bk953x_object_t *p_bk953x_object)
     //Calibrate Digital VCO
     CLR_BIT(g_bk9531_init_config[4].value, 25);
     MID_BK953X_WRITE(0x04, &g_bk9531_init_config[4].value);
-    SET_BIT(g_bk9531_init_config[3].value, 25);
+    SET_BIT(g_bk9531_init_config[4].value, 25);
     MID_BK953X_WRITE(0x04, &g_bk9531_init_config[4].value);
 
     //Disable calibration clock
     CLR_BIT(g_bk9531_init_config[7].value, 25);
     SET_BIT(g_bk9531_init_config[7].value, 28);
-    MID_BK953X_WRITE(0x07, &g_bk9531_init_config[4].value);
+    MID_BK953X_WRITE(0x07, &g_bk9531_init_config[7].value);
 
     //Set ddf_en=1 for tx_trigger
     MID_BK953X_READ(0x35, &value);
@@ -206,7 +212,6 @@ int bk9531_tx_freq_chan_set(bk953x_object_t *p_bk953x_object, freq_chan_object_t
     value = 0x4D260000; //632MHz
     MID_BK953X_WRITE(0x0D, &value);
 
-
     bk9531_tx_trigger(p_bk953x_object);
 
     return err_code;
@@ -230,7 +235,6 @@ int bk9531_tx_spec_data_set(bk953x_object_t *p_bk953x_object , uint8_t data)
 int bk9531_tx_mic_rssi_get(bk953x_object_t *p_bk953x_object, uint32_t *p_data)
 {
     int err_code = 0;
-    uint32_t value = 0;
 
     IS_NULL(p_bk953x_object);
     IS_NULL(p_data);
@@ -244,26 +248,27 @@ int bk9531_config_init(bk953x_object_t *p_bk953x_object)
 {
     int err_code = 0;
     uint8_t i = 0;
-    uint32_t value =0;
 
     for(i = 0 ; i < ARRAY_SIZE(g_bk9531_init_config) ; i ++)
+    {
+        err_code = mid_bk953x_write_one_reg(&p_bk953x_object->mid_bk953x_object, BK953X_DEVICE_ID, g_bk9531_init_config[i].reg, &g_bk9531_init_config[i].value);
+        if(err_code)
         {
-            err_code = mid_bk953x_write_one_reg(&p_bk953x_object->mid_bk953x_object, BK953X_DEVICE_ID, g_bk9531_init_config[i].reg, &g_bk9531_init_config[i].value);
-            if(err_code)
-            {
-                trace_warn("bk953x_config_init  wite reg 0x%02x fail\n\r",g_bk9531_init_config[i].reg);
-            }
+            trace_warn("bk953x_config_init  wite reg 0x%02x fail\n\r",g_bk9531_init_config[i].reg);
         }
+    }
 
 /**
  * 先粗暴的配置
  */
 #if 1
-        
-        bk9531_tx_trigger(p_bk953x_object);
-//      bk9531_tx_freq_chan_set(p_bk953x_object, NULL);
+    trace_debug("write all reg done\n\r");
+    bk9531_reg_printf(p_bk953x_object);
+
+    bk9531_tx_trigger(p_bk953x_object);
+//    bk9531_tx_freq_chan_set(p_bk953x_object, NULL);
 #endif
-        trace_debug("bk9531_config_init  done\n\r");
+    trace_debug("bk9531_config_init  done\n\r");
 
     return err_code;
 }
