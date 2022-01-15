@@ -35,7 +35,7 @@ bk953x_reg_value_t g_bk9531_init_config[] = {
     {0x01 , 0x04CF0057},
     {0x02 , 0x8990E02F},
 //    {0x03 , 0x341206FF},    //UBAND,
-    {0x03 , 0x341216FF},    //for cxn test U段,6分频
+    {0x03 , 0x341236FF},    //for cxn test U段,6分频
     {0x04 , 0x53880044},
     {0x05 , 0x00280380},
     {0x06 , 0x5BEDFB00},
@@ -180,9 +180,7 @@ int bk9531_tx_trigger(bk953x_object_t *p_bk953x_object)
 
     //Set tx_en=1 for tx_trigger
     MID_BK953X_READ(0x3F, &value);
-    trace_debug("bk953x_config_init 0X3F read value 0x%08x\n\r",value);
     SET_BIT(value,31);
-    trace_debug("bk953x_config_init 0X3F write value 0x%08x\n\r",value);
     MID_BK953X_WRITE(0x3F, &value);
 
     //Set tx_en=1 another tx enable, from hds
@@ -263,7 +261,7 @@ int bk9531_config_init(bk953x_object_t *p_bk953x_object)
  */
 #if 1
     trace_debug("write all reg done\n\r");
-    bk9531_reg_printf(p_bk953x_object);
+//    bk9531_reg_printf(p_bk953x_object);
 
     bk9531_tx_trigger(p_bk953x_object);
 //    bk9531_tx_freq_chan_set(p_bk953x_object, NULL);
@@ -321,3 +319,9 @@ int bk9531_reg_printf(bk953x_object_t *p_bk953x_object)
 
     return 0;
 }
+
+int bk9531_idle_set(bk953x_object_t *p_bk953x_object)
+{
+
+}
+

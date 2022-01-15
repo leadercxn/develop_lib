@@ -38,7 +38,8 @@ typedef struct
     antenna_type_e              antenna_type;
     uint16_t                    freq_chan_index;
     mid_bk953x_t                mid_bk953x_object;
-    bk953x_hw_reset_handler     hw_reset_handler;
+
+    void                        *p_rst_gpio;    //指向复位引脚
 } bk953x_object_t;
 
 #define BK9531_CHID_ID      0x9531
