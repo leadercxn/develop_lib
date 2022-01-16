@@ -430,11 +430,12 @@ int bk9532_rx_volume_set(bk953x_object_t *p_bk953x_object, uint8_t vol)
     }
 
     MID_BK953X_READ(0x32, &value);
+//    trace_debug("bk9532_rx_volume_set read 0x%08x\n\r",value);
 
     /**
      * eq_gain & duf_gain
      */
-    value &= ~ 0x1Ful;
+    value &= ~ 0x1F;
 
     /**
      * duf_gain
@@ -444,9 +445,9 @@ int bk9532_rx_volume_set(bk953x_object_t *p_bk953x_object, uint8_t vol)
     /**
      * eq_gain
      */
-    value &= ~(0x1Ful << 5);
+    value &= ~(0x1F << 5);
     value |= ((uint32_t) vol << 5);
-
+//    trace_debug("bk9532_rx_volume_set write 0x%08x\n\r",value);
     MID_BK953X_WRITE(0x32, &value);
 
     return err_code;
@@ -765,12 +766,12 @@ int bk9532_config_init(bk953x_object_t *p_bk953x_object)
     bk9532_reg_printf(p_bk953x_object);
 
 /**
- * 先粗暴的配置
+ * 先根据官方demo粗暴的配置,但实际使用期间，有BUG
  */
-#if 1
+#if 0
     MID_BK953X_READ(0x38, &value);
     value &= 0x00ffffff;
-    value |= 0x55;      //设晶振振荡电容调整初值 2019-08-15
+    value |= (uint32_t)(0x55) << 24;      //设晶振振荡电容调整初值 2019-08-15
     MID_BK953X_WRITE(0x38, &value);
 
     freq_chan_object_t freq_chan_obj;
@@ -791,13 +792,14 @@ int bk9532_config_init(bk953x_object_t *p_bk953x_object)
         MID_BK953X_READ(0x38, &value);
 
         value &= 0x00ffffff;
-        value |= xtal_tab[i];
+        value |= (uint32_t)(xtal_tab[i] << 24);
 
         MID_BK953X_WRITE(0x38, &value);
 
         delay_ms(15);
 
         MID_BK953X_READ(0x7C, &value);
+        trace_debug("reg 0x7c value is 0x%08x\n\r",value);
         if(!IS_SET(value,27))
         {
             rec_spec_data = value & 0xff;
@@ -823,7 +825,7 @@ int bk9532_config_init(bk953x_object_t *p_bk953x_object)
 
         bk9532_rx_plc_enable(p_bk953x_object, true);
 
-        bk9532_rx_afc_enable(p_bk953x_object,false);
+        bk9532_rx_afc_enable(p_bk953x_object, false);
     }
 
     trace_debug("bk9532 cfg done  done\n\r");
