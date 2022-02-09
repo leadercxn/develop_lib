@@ -50,9 +50,11 @@ int bk9531_tx_trigger(bk953x_object_t *p_bk953x_object);
 
 int bk9531_tx_freq_chan_set(bk953x_object_t *p_bk953x_object, freq_chan_object_t *p_freq_chan_object);
 
+int bk9531_tx_id_set(bk953x_object_t *p_bk953x_object , uint32_t id);
+
 int bk9531_tx_spec_data_set(bk953x_object_t *p_bk953x_object , uint8_t data);
 
-int bk9531_tx_mic_rssi_get(bk953x_object_t *p_bk953x_object, uint32_t *p_data);
+int bk9531_tx_mic_rssi_get(bk953x_object_t *p_bk953x_object, uint8_t *p_data);
 
 int bk9531_config_init(bk953x_object_t *p_bk953x_object);
 
@@ -61,5 +63,9 @@ int bk9531_chip_id_get(bk953x_object_t *p_bk953x_object);
 void bk9531_res_init(bk953x_object_t *p_bk953x_object);
 
 int bk9531_reg_printf(bk953x_object_t *p_bk953x_object);
+
+int bk9531_reg_read(bk953x_object_t *p_bk953x_object, uint8_t reg, uint32_t *p_data);
+
+int bk9531_reg_write(bk953x_object_t *p_bk953x_object, uint8_t reg, uint32_t *p_data);
 
 #endif

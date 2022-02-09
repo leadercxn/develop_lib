@@ -195,19 +195,38 @@ int bk9531_tx_trigger(bk953x_object_t *p_bk953x_object)
 
 int bk9531_tx_freq_chan_set(bk953x_object_t *p_bk953x_object, freq_chan_object_t *p_freq_chan_object)
 {
+    IS_NULL(p_bk953x_object);
+    IS_NULL(p_freq_chan_object);
+
+    p_bk953x_object->band_type = p_freq_chan_object->band_type;
+    p_bk953x_object->freq_chan_index = p_freq_chan_object->chan_index;
+
     int err_code = 0;
     uint32_t value = 0;
 
+    /**
+     * 6分频
+     */
     CLR_BIT(g_bk9531_init_config[3].value, 15);
     CLR_BIT(g_bk9531_init_config[3].value, 14);
-    CLR_BIT(g_bk9531_init_config[3].value, 13);
+    SET_BIT(g_bk9531_init_config[3].value, 13);
 
+    /**
+     * U段
+     */
     CLR_BIT(g_bk9531_init_config[3].value, 21);
     SET_BIT(g_bk9531_init_config[3].value, 20);
     MID_BK953X_WRITE(0x03, &g_bk9531_init_config[3].value);
 
+    if(p_freq_chan_object)
+    {
+        value = p_freq_chan_object->reg_value;
+    }
+    else
+    {
+        value = 0x4D260000; //632MHz
+    }
 
-    value = 0x4D260000; //632MHz
     MID_BK953X_WRITE(0x0D, &value);
 
     bk9531_tx_trigger(p_bk953x_object);
@@ -230,14 +249,27 @@ int bk9531_tx_spec_data_set(bk953x_object_t *p_bk953x_object , uint8_t data)
     return err_code;
 }
 
-int bk9531_tx_mic_rssi_get(bk953x_object_t *p_bk953x_object, uint32_t *p_data)
+int bk9531_tx_id_set(bk953x_object_t *p_bk953x_object , uint32_t id)
 {
     int err_code = 0;
+    uint32_t tx_id = id;
+
+    MID_BK953X_WRITE(0x38, &tx_id);
+
+    return err_code;
+}
+
+int bk9531_tx_mic_rssi_get(bk953x_object_t *p_bk953x_object, uint8_t *p_data)
+{
+    int err_code = 0;
+    uint32_t value = 0;
 
     IS_NULL(p_bk953x_object);
     IS_NULL(p_data);
 
-    MID_BK953X_READ(0x3F, p_data);
+    MID_BK953X_READ(0x77, &value);
+
+    *p_data = (value & 0xFF) - 0x3f;
 
     return err_code;
 } 
@@ -257,6 +289,11 @@ int bk9531_config_init(bk953x_object_t *p_bk953x_object)
     }
 
 /**
+ * 软复位
+ */
+
+
+/**
  * 先粗暴的配置
  */
 #if 1
@@ -264,7 +301,9 @@ int bk9531_config_init(bk953x_object_t *p_bk953x_object)
 //    bk9531_reg_printf(p_bk953x_object);
 
     bk9531_tx_trigger(p_bk953x_object);
-//    bk9531_tx_freq_chan_set(p_bk953x_object, NULL);
+
+    trace_debug("bk9531_tx_trigger done\n\r");
+    bk9531_reg_printf(p_bk953x_object);
 #endif
     trace_debug("bk9531_config_init  done\n\r");
 
@@ -320,8 +359,20 @@ int bk9531_reg_printf(bk953x_object_t *p_bk953x_object)
     return 0;
 }
 
-int bk9531_idle_set(bk953x_object_t *p_bk953x_object)
+int bk9531_reg_read(bk953x_object_t *p_bk953x_object, uint8_t reg, uint32_t *p_data)
 {
+    int err_code = 0;
 
+    MID_BK953X_READ(reg, p_data);
+
+    return err_code;
 }
 
+int bk9531_reg_write(bk953x_object_t *p_bk953x_object, uint8_t reg, uint32_t *p_data)
+{
+    int err_code = 0;
+
+    MID_BK953X_WRITE(reg, p_data);
+
+    return err_code;
+}
