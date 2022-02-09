@@ -232,7 +232,7 @@ static int bk9532_rx_calibration_trigger(bk953x_object_t *p_bk953x_object)
 
     MID_BK953X_WRITE(0x06, &g_bk9532_init_config[6].value);
 
-    delay_ms(1);
+    delay_ms(5);
 
     /* Enable calibration clock */
     SET_BIT(g_bk9532_init_config[7].value, 25);
@@ -248,7 +248,7 @@ static int bk9532_rx_calibration_trigger(bk953x_object_t *p_bk953x_object)
 
     MID_BK953X_WRITE(0x03, &g_bk9532_init_config[3].value);
 
-    delay_ms(5);
+    delay_ms(10);
 
     /* Calibrate Digital VCO */
     CLR_BIT(g_bk9532_init_config[4].value, 25);
@@ -303,6 +303,7 @@ int bk9532_freq_chan_set(bk953x_object_t *p_bk953x_object, freq_chan_object_t *p
     bk9532_rx_calibration_trigger(p_bk953x_object);
     bk9532_rx_reset(p_bk953x_object);
     bk9532_rx_plc_reset(p_bk953x_object);
+    bk9532_soft_reset(p_bk953x_object);
 
     return err_code;
 }
@@ -714,6 +715,31 @@ int bk9532_rx_spec_data_get(bk953x_object_t *p_bk953x_object, uint8_t *p_spec_da
 }
 
 /**
+ * 是否接收到 信号
+ */
+bool bk9532_is_receive_single(bk953x_object_t *p_bk953x_object)
+{
+    int err_code = 0;
+    uint32_t value = 0;
+    bool is_receive = false;
+
+    IS_NULL(p_bk953x_object);
+
+    MID_BK953X_READ(0x7C, &value);
+
+    if(value & 0x08000000)
+    {
+        is_receive = false;
+    }
+    else
+    {
+        is_receive = true;
+    }
+
+    return is_receive;
+}
+
+/**
  * @brief BK953X 软复位
  */
 int bk9532_soft_reset(bk953x_object_t *p_bk953x_object)
@@ -732,7 +758,6 @@ int bk9532_soft_reset(bk953x_object_t *p_bk953x_object)
     SET_BIT(value,5);
 
     MID_BK953X_WRITE(0x3F, &value);
-    delay_ms(50);
 
     return err_code;
 }
@@ -746,6 +771,9 @@ int bk9532_config_init(bk953x_object_t *p_bk953x_object)
     uint8_t i = 0;
     uint32_t value =0;
 
+    /**
+     * 配置BK9532寄存器
+     */
     for(i = 0 ; i < ARRAY_SIZE(g_bk9532_init_config) ; i ++)
     {
         err_code = mid_bk953x_write_one_reg(&p_bk953x_object->mid_bk953x_object, BK953X_DEVICE_ID, g_bk9532_init_config[i].reg, &g_bk9532_init_config[i].value);
@@ -755,15 +783,11 @@ int bk9532_config_init(bk953x_object_t *p_bk953x_object)
         }
     }
 
-    delay_ms(150);
-
-    bk9532_reg_printf(p_bk953x_object);
+    delay_ms(50);
 
     err_code = bk9532_soft_reset(p_bk953x_object);
 
     trace_debug("bk953x_soft_reset  done\n\r");
-
-    bk9532_reg_printf(p_bk953x_object);
 
 /**
  * 先根据官方demo粗暴的配置,但实际使用期间，有BUG
@@ -832,6 +856,23 @@ int bk9532_config_init(bk953x_object_t *p_bk953x_object)
     bk9532_reg_printf(p_bk953x_object);
 #endif
 
+
+#if 0
+    bk9532_rx_volume_set(p_bk953x_object, 2);
+
+    bk9532_rx_antena_set(p_bk953x_object, DA_AUTO);
+
+    bk9532_rx_adpcm_mode_set(p_bk953x_object, ADPCM_NORMAL);
+
+    bk9532_rx_plc_enable(p_bk953x_object, true);
+
+    bk9532_rx_afc_enable(p_bk953x_object, false);
+#endif
+
+    /**
+     * 读取 并 打印寄存器的值
+     */
+    bk9532_reg_printf(p_bk953x_object);
     return err_code;
 }
 
@@ -882,4 +923,22 @@ int bk9532_reg_printf(bk953x_object_t *p_bk953x_object)
     }
 
     return 0;
+}
+
+int bk9532_reg_read(bk953x_object_t *p_bk953x_object, uint8_t reg, uint32_t *p_data)
+{
+    int err_code = 0;
+
+    MID_BK953X_READ(reg, p_data);
+
+    return err_code;
+}
+
+int bk9532_reg_write(bk953x_object_t *p_bk953x_object, uint8_t reg, uint32_t *p_data)
+{
+    int err_code = 0;
+
+    MID_BK953X_WRITE(reg, p_data);
+
+    return err_code;
 }

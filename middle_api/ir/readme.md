@@ -25,5 +25,15 @@
     6. 结束符 5ms的低电平
     7. CRC = SUM(DATAs)
 
-
+    8. 不同 command 的数据结构
+        - freq: 0x01
+            ```
+                typedef struct
+                {
+                    uint8_t len;
+                    uint8_t band_type;
+                    uint8_t region_band;
+                    uint8_t freq_ch;
+                } __attribute__((__packed__ )) ir_command_freq_t;
+            ```
 

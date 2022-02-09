@@ -190,6 +190,11 @@ int ir_tx_start(uint8_t *p_data, uint8_t len)
         return -EBUSY;
     }
 
+    if(len == 0)
+    {
+        return err_code;
+    }
+
     memcpy(m_tx_data, p_data, len);
     m_tx_data_len = len;
 
