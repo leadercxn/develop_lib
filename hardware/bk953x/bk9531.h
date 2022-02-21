@@ -38,7 +38,8 @@ typedef struct
     antenna_type_e              antenna_type;
     uint16_t                    freq_chan_index;
     mid_bk953x_t                mid_bk953x_object;
-    bk953x_hw_reset_handler     hw_reset_handler;
+
+    void                        *p_rst_gpio;    //指向复位引脚
 } bk953x_object_t;
 
 #define BK9531_CHID_ID      0x9531
@@ -49,9 +50,11 @@ int bk9531_tx_trigger(bk953x_object_t *p_bk953x_object);
 
 int bk9531_tx_freq_chan_set(bk953x_object_t *p_bk953x_object, freq_chan_object_t *p_freq_chan_object);
 
+int bk9531_tx_id_set(bk953x_object_t *p_bk953x_object , uint32_t id);
+
 int bk9531_tx_spec_data_set(bk953x_object_t *p_bk953x_object , uint8_t data);
 
-int bk9531_tx_mic_rssi_get(bk953x_object_t *p_bk953x_object, uint32_t *p_data);
+int bk9531_tx_mic_rssi_get(bk953x_object_t *p_bk953x_object, uint8_t *p_data);
 
 int bk9531_config_init(bk953x_object_t *p_bk953x_object);
 
@@ -60,5 +63,9 @@ int bk9531_chip_id_get(bk953x_object_t *p_bk953x_object);
 void bk9531_res_init(bk953x_object_t *p_bk953x_object);
 
 int bk9531_reg_printf(bk953x_object_t *p_bk953x_object);
+
+int bk9531_reg_read(bk953x_object_t *p_bk953x_object, uint8_t reg, uint32_t *p_data);
+
+int bk9531_reg_write(bk953x_object_t *p_bk953x_object, uint8_t reg, uint32_t *p_data);
 
 #endif
