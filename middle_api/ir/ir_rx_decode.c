@@ -172,10 +172,8 @@ static void exit_irq_handler(void)
     } while (!is_ir_rx_finish);
 
 
-#ifdef DEBUG
     trace_debug("ir rx finish,rx data is\r\n");
     trace_dump_d(m_ir_rx_decode_data, byte_index);
-#else
 
     //长度少于规定协议的最小长度，错误
     if(byte_index < 4)
@@ -193,18 +191,15 @@ static void exit_irq_handler(void)
 
     if(sum_crc == m_ir_rx_decode_data[byte_index - 1])
     {
-        trace_debug("ir rx finish,rx data is\r\n");
+        trace_debug("ir rx crc success\r\n");
 
         // 校验通过后才赋值
         m_ir_rx_decode_data_len = byte_index;
-
-        trace_dump_d(m_ir_rx_decode_data, m_ir_rx_decode_data_len);
     }
     else
     {
-        trace_error("ir rx error data verify\r\n");
+        trace_error("ERROR: ir rx data verify error\r\n");
     }
-#endif
 
     EXIT_IRQ_ENABLE(true);
 }
