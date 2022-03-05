@@ -4,6 +4,7 @@
 #include "app_scheduler.h"
 #include "app_timer.h"
 #include "crc32.h"
+#include "queue.h"
 
 #endif
 
