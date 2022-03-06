@@ -8,6 +8,10 @@ void mid_system_tick_init(void)
     ft_systick_init();
 #endif
 
+#ifdef HK32
+    hk_systick_init();
+#endif
+
 }
 
 

@@ -4,15 +4,15 @@
 #ifndef __MIDDLE_API_H
 #define __MIDDLE_API_H
 
-#include "tft_8080.h"
-#include "mid_bk953x.h"
-#include "trace.h"
-#include "mid_pwm.h"
-#include "ir_tx_encode.h"
-#include "ir_rx_decode.h"
-#include "mid_timer.h"
+//#include "tft_8080.h"
+//#include "mid_bk953x.h"
+//#include "trace.h"
+//#include "mid_pwm.h"
+//#include "ir_tx_encode.h"
+//#include "ir_rx_decode.h"
+//#include "mid_timer.h"
 #include "mid_delay.h"
-#include "mid_adc.h"
+//#include "mid_adc.h"
 #include "mid_gpio.h"
 #include "mid_systick.h"
 
