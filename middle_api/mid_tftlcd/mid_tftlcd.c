@@ -1,5 +1,5 @@
 #include "mid_tftlcd.h"
-#include "FONT.H"
+#include "font.h"
 
 
 
