@@ -1,6 +1,9 @@
 #ifndef __MID_GPIO_H
 #define __MID_GPIO_H
 
+#ifdef FT32
+#include "ft32f0xx.h"
+#endif
 typedef enum
 {
     GPIO_DIR_OUTPUR,
