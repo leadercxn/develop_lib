@@ -1,6 +1,6 @@
 ;******************** (C) COPYRIGHT 2020 FMD ******************************************
 ;* File Name          : startup_ft32f030x8.s
-;* Author             : AE
+;* Author             : MCD Application Team
 ;* Version            : V1.0.0
 ;* Date               : 2020-06-22
 ;* Description        : FT32F030X8 devices vector table for MDK-ARM toolchain.

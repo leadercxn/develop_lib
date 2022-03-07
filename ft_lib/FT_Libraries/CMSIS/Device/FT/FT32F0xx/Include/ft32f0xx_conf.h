@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    Project/FT32F030X8_StdPeriph_Templates/ft32f030x8_conf.h 
+  * @file    Project/FT32f0xx_StdPeriph_Templates/FT32f0xx_conf.h 
   * @author  MCD Application Team
   * @version V1.0.0
   * @date    2021-03-17
@@ -8,33 +8,33 @@
   */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __FT32F030X8_CONF_H
-#define __FT32F030X8_CONF_H
+#ifndef __FT32f0xx_CONF_H
+#define __FT32f0xx_CONF_H
 
 /* Includes ------------------------------------------------------------------*/
 /* Comment the line below to disable peripheral header file inclusion */
-#include "ft32f030x8_adc.h"
-#include "ft32f030x8_crc.h"
-#include "ft32f030x8_crs.h"
-#include "ft32f030x8_comp.h"
-#include "ft32f030x8_opa.h"
-#include "ft32f030x8_dac.h"
-#include "ft32f030x8_dbgmcu.h"
-#include "ft32f030x8_dma.h"
-#include "ft32f030x8_exti.h"
-#include "ft32f030x8_flash.h"
-#include "ft32f030x8_gpio.h"
-#include "ft32f030x8_syscfg.h"
-#include "ft32f030x8_i2c.h"
-#include "ft32f030x8_iwdg.h"
-#include "ft32f030x8_pwr.h"
-#include "ft32f030x8_rcc.h"
-#include "ft32f030x8_rtc.h"
-#include "ft32f030x8_spi.h"
-#include "ft32f030x8_tim.h"
-#include "ft32f030x8_usart.h"
-#include "ft32f030x8_wwdg.h"
-#include "ft32f030x8_misc.h"  /* High level functions for NVIC and SysTick (add-on to CMSIS functions) */
+#include "FT32f0xx_adc.h"
+#include "FT32f0xx_crc.h"
+#include "FT32f0xx_crs.h"
+#include "FT32f0xx_comp.h"
+#include "FT32f0xx_opa.h"
+#include "FT32f0xx_dac.h"
+#include "FT32f0xx_dbgmcu.h"
+#include "FT32f0xx_dma.h"
+#include "FT32f0xx_exti.h"
+#include "FT32f0xx_flash.h"
+#include "FT32f0xx_gpio.h"
+#include "FT32f0xx_syscfg.h"
+#include "FT32f0xx_i2c.h"
+#include "FT32f0xx_iwdg.h"
+#include "FT32f0xx_pwr.h"
+#include "FT32f0xx_rcc.h"
+#include "FT32f0xx_rtc.h"
+#include "FT32f0xx_spi.h"
+#include "FT32f0xx_tim.h"
+#include "FT32f0xx_usart.h"
+#include "FT32f0xx_wwdg.h"
+#include "FT32f0xx_misc.h"  /* High level functions for NVIC and SysTick (add-on to CMSIS functions) */
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
@@ -59,6 +59,6 @@
   #define assert_param(expr) ((void)0)
 #endif /* USE_FULL_ASSERT */
 
-#endif /* __FT32F030X8_CONF_H */
+#endif /* __FT32f0xx_CONF_H */
 
 /************************ (C) COPYRIGHT FMD *****END OF FILE****/
