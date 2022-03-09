@@ -2892,7 +2892,7 @@ typedef struct
 /*                                                                            */
 /******************************************************************************/
 /*******************  Bit definition for FLASH_ACR register  ******************/
-#define  FLASH_ACR_LATENCY                   ((uint32_t)0x0000000F)        /*!< LATENCY bit (Latency) */
+#define  FLASH_ACR_LATENCY                   ((uint32_t)0x00000002)        /*!< LATENCY bit (Latency) */
 
 #define  FLASH_ACR_PRFTBE                    ((uint32_t)0x00000010)        /*!< Prefetch Buffer Enable */
 #define  FLASH_ACR_PRFTBS                    ((uint32_t)0x00000020)        /*!< Prefetch Buffer Status */
