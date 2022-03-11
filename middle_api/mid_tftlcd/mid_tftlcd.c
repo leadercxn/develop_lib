@@ -1,6 +1,6 @@
 #include "mid_tftlcd.h"
 #include "font.h"
-
+#include "board_config.h"
 
 
 /**
@@ -12,6 +12,8 @@
  */
 int LCD_Param_Setting(driver_info_t *p_drv)
 {
+    IS_NULL(p_drv);
+
     p_drv->write_cmd(p_drv->dev, p_drv->lcd_param->setxcmd);
     p_drv->write_data(p_drv->dev, 0);
     p_drv->write_data(p_drv->dev, 0);
@@ -37,6 +39,13 @@ int LCD_Param_Setting(driver_info_t *p_drv)
  */
 int LCD_SetCursor(driver_info_t *p_drv, uint16_t xpos, uint16_t ypos)
 {
+    IS_NULL(p_drv);
+
+    if ((xpos > p_drv->lcd_param->width) || (xpos > p_drv->lcd_param->height))
+    {
+        return -EINVAL;
+    }
+
     p_drv->write_cmd(p_drv->dev, p_drv->lcd_param->setxcmd);
     p_drv->write_data(p_drv->dev, (xpos >> 8));
     p_drv->write_data(p_drv->dev, (xpos & 0xff));
@@ -58,6 +67,8 @@ int LCD_SetCursor(driver_info_t *p_drv, uint16_t xpos, uint16_t ypos)
  */
 int LCD_WriteRAM_Prepare(driver_info_t *p_drv)
 {
+    IS_NULL(p_drv);
+
     p_drv->write_cmd(p_drv->dev, p_drv->lcd_param->wramcmd);
     
     return 0;
@@ -72,27 +83,10 @@ int LCD_WriteRAM_Prepare(driver_info_t *p_drv)
  */
 int LCD_WriteRAM(driver_info_t *p_drv, uint16_t color)
 {
+    IS_NULL(p_drv);
+
     p_drv->write_data(p_drv->dev, (color >> 8));
     p_drv->write_data(p_drv->dev, (color & 0xff));
-
-    return 0;
-}
-
-
-/**
- * @brief  画点函数
- * 
- * @param[i] p_drv          驱动设备结构体 
- * @param[i] (x, y)         点坐标
- * @param[i] color          目标点颜色
- * 
- * @retval no reutrn
- */
-int LCD_DrawPoint(driver_info_t *p_drv, uint16_t x, uint16_t y, uint16_t color)
-{
-    LCD_SetCursor(p_drv, x, y);
-    LCD_WriteRAM_Prepare(p_drv);
-    LCD_WriteRAM(p_drv, color);
 
     return 0;
 }
@@ -106,6 +100,8 @@ int LCD_DrawPoint(driver_info_t *p_drv, uint16_t x, uint16_t y, uint16_t color)
  */
 int LCD_Clear(driver_info_t *p_drv)
 {
+    IS_NULL(p_drv);
+
     lcd_dev_t *lcddev = p_drv->lcd_param;
     uint8_t buf[640];       // TODO: 此处固定大小并不妥，可以通过开辟内存的方式分配空间
 
@@ -126,6 +122,32 @@ int LCD_Clear(driver_info_t *p_drv)
 }
 
 /**
+ * @brief  画点函数
+ * 
+ * @param[i] p_drv          驱动设备结构体 
+ * @param[i] (x, y)         点坐标
+ * @param[i] color          目标点颜色
+ * 
+ * @retval no reutrn
+ */
+int LCD_DrawPoint(driver_info_t *p_drv, point_info_t point)
+{
+    IS_NULL(p_drv);
+
+    if ((point.coord.x > p_drv->lcd_param->width) 
+        || (point.coord.y > p_drv->lcd_param->height))
+    {
+        return -EINVAL;
+    }
+
+    LCD_SetCursor(p_drv, point.coord.x, point.coord.y);
+    LCD_WriteRAM_Prepare(p_drv);
+    LCD_WriteRAM(p_drv, point.color);
+
+    return 0;
+}
+
+/**
  * @brief           显示字符
  * 
  * @param[i] p_drv          驱动设备结构体 
@@ -136,31 +158,43 @@ int LCD_Clear(driver_info_t *p_drv)
  * 
  * @retval no return
  */
-int LCD_ShowChar(driver_info_t *p_drv, uint16_t x, uint16_t y, uint8_t num, uint8_t size, uint8_t mode)
-{  							  
+int LCD_ShowChar(driver_info_t *p_drv, chars_info_t chars)
+{  			
+    IS_NULL(p_drv);
+
+    if ((chars.coord.x > p_drv->lcd_param->width) || (chars.coord.y > p_drv->lcd_param->height)
+        || ((chars.mode != 0) || (chars.mode != 1)))
+    {
+        return -EINVAL;
+    }
+    
     uint8_t temp, t1, t;
-	uint16_t y0 = y;
+    point_info_t point;     // 构建点变量
+	uint16_t y0;
 
     //得到字体一个字符对应点阵集所占的字节数	
-	uint8_t csize = (size/8 + ((size % 8) ? 1:0))*(size / 2);	
+	uint8_t csize = (chars.size/8 + ((chars.size % 8) ? 1:0))*(chars.size / 2);	
     lcd_dev_t *lcddev = p_drv->lcd_param;
     
+    y0 = chars.coord.y;
+    point.coord =   chars.coord;
+
     //得到偏移后的值(ASCII字库是从空格开始取模，所以-' '就是对应字符的字库)
-    num = num - ' ';       
+    chars.num = chars.num - ' ';       
     
 	for (t = 0; t < csize; t++)
 	{   
-		if (size == 12)
+		if (chars.size == 12)
         {
-            temp = asc2_1206[num][t]; 	 	//调用1206字体
+            temp = asc2_1206[chars.num][t]; 	 	//调用1206字体
         }
-		else if (size == 16)
+		else if (chars.size == 16)
         {
-            temp = asc2_1608[num][t];	        //调用1608字体
+            temp = asc2_1608[chars.num][t];	        //调用1608字体
         }
-		else if (size == 24)
+		else if (chars.size == 24)
         {
-            temp = asc2_2412[num][t];	        //调用2412字体
+            temp = asc2_2412[chars.num][t];	        //调用2412字体
         }
 		else 
         {
@@ -171,25 +205,27 @@ int LCD_ShowChar(driver_info_t *p_drv, uint16_t x, uint16_t y, uint8_t num, uint
 		{			    
 			if (temp & 0x80)
             {
-                LCD_DrawPoint(p_drv, x, y, p_drv->point_color);
+                point.color =   p_drv->point_color;
+                LCD_DrawPoint(p_drv, point);
             }
-			else if (mode == 0)
+			else if (chars.mode == 0)
             {
-                LCD_DrawPoint(p_drv, x, y, p_drv->background_color);
+                point.color =   p_drv->background_color;
+                LCD_DrawPoint(p_drv, point);
             }
 
 			temp <<= 1;
-			y++;
-			if (y >= lcddev->height)
+			point.coord.y++;
+			if (point.coord.y >= lcddev->height)
             {
                 return -1;		//超区域
             }
 
-			if ((y - y0) == size)
+			if ((point.coord.y - y0) == chars.size)
 			{
-				y = y0;
-				x++;
-				if (x >= lcddev->width)
+				point.coord.y = y0;
+				point.coord.x++;
+				if (point.coord.x >= lcddev->width)
                 {
                     return -1;	//超区域
                 }
@@ -212,25 +248,43 @@ int LCD_ShowChar(driver_info_t *p_drv, uint16_t x, uint16_t y, uint8_t num, uint
  * 
  * @retval no return
  */  
-int LCD_ShowString(driver_info_t *p_drv, uint16_t x,uint16_t y,uint16_t width,uint16_t height,uint8_t size,uint8_t *p)
+int LCD_ShowString(driver_info_t *p_drv, string_info_t string)
 {         
-	uint8_t x0 = x;
-	width += x;
-	height += y;
+    IS_NULL(p_drv);
+
+    if ((string.coord.x > p_drv->lcd_param->width) || (string.coord.y > p_drv->lcd_param->height)
+        || (string.width > p_drv->lcd_param->width) 
+        || (string.height > p_drv->lcd_param->height))
+    {
+        return -EINVAL;
+    }
+
+    uint8_t x0;
+    chars_info_t chars;
+    uint8_t *p = string.str;
+
+	x0  = string.coord.x;
+	string.width    += string.coord.x;
+	string.height   += string.coord.y;
+    chars.size      =   string.size;
+    chars.mode      =   1;
+    chars.coord.x   = string.coord.x;
+    chars.coord.y   = string.coord.y;
 
     while ((*p <= '~') && (*p>=' '))    //判断是不是非法字符!
     {       
-        if (x >= width)
+        if (chars.coord.x >= string.width)
         {
-            x = x0;
-            y += size;
+            chars.coord.x = x0;
+            chars.coord.y += string.size;
         }
-        if (y >= height)
+        if (chars.coord.y >= string.height)
         {
             break;                      //退出
         }
-        LCD_ShowChar(p_drv, x, y, *p, size, 1);
-        x += size / 2;
+        chars.num = *p;
+        LCD_ShowChar(p_drv, chars);
+        chars.coord.x += string.size / 2;
         p++;
     }  
     return 0;
@@ -257,19 +311,35 @@ uint32_t LCD_Pow(uint8_t m,uint8_t n)
  * 
  * @retval no return
  */
-int LCD_ShowNum(driver_info_t *p_drv, uint16_t x,uint16_t y,uint32_t num,uint8_t len,uint8_t size)
+int LCD_ShowNum(driver_info_t *p_drv, number_info_t number)
 {         	
-	uint8_t t,temp;
-	uint8_t enshow = 0;		
+    IS_NULL(p_drv);
 
-	for (t = 0; t < len; t++)
+    if ((number.coord.x > p_drv->lcd_param->width) || (number.coord.y > p_drv->lcd_param->height))
+    {
+        return -EINVAL;
+    }
+
+	uint8_t t,temp;
+	uint8_t enshow = 0;	
+    chars_info_t chars;	
+
+    chars.coord.y = number.coord.y;
+    chars.mode    = 0;
+    chars.size    = number.size;
+
+	for (t = 0; t < number.len; t++)
 	{
-		temp = (num / LCD_Pow(10, len-t-1)) % 10;
-		if ((enshow == 0) && (t < (len - 1)))
+		temp = (number.num / LCD_Pow(10, number.len-t-1)) % 10;
+        chars.coord.x = (number.coord.x + (number.size/2)*t);
+
+		if ((enshow == 0) && (t < (number.len - 1)))
 		{
 			if (temp == 0)
 			{
-				LCD_ShowChar(p_drv, (x + (size / 2) * t), y, ' ', size, 0);
+                chars.num = ' ';
+                chars.coord.x = (number.coord.x + (number.size/2)*t);
+				LCD_ShowChar(p_drv, chars);
 				continue;
 			}
             else 
@@ -277,11 +347,14 @@ int LCD_ShowNum(driver_info_t *p_drv, uint16_t x,uint16_t y,uint32_t num,uint8_t
                 enshow=1; 
             }
 		}
-        LCD_ShowChar(p_drv, (x + (size/2) * t), y, (temp + '0'), size, 0); 
+
+        chars.num = temp + '0';
+        LCD_ShowChar(p_drv, chars); 
 	}
 
     return 0;
 } 
+
 
 /**
  * @brief  填充指定区域指定颜色
@@ -293,28 +366,40 @@ int LCD_ShowNum(driver_info_t *p_drv, uint16_t x,uint16_t y,uint32_t num,uint8_t
  * 
  * @retval no return
  */
-int LCD_Fill(driver_info_t *p_drv, uint16_t sx, uint16_t sy, uint16_t ex, uint16_t ey, uint16_t color)
-{          
+int LCD_Fill(driver_info_t *p_drv, fill_area_info_t fill_area)
+{
+    IS_NULL(p_drv);
+
+    if ((fill_area.coord_s.x > p_drv->lcd_param->width) 
+        || (fill_area.coord_s.y > p_drv->lcd_param->height)
+        || (fill_area.coord_e.x > p_drv->lcd_param->width) 
+        || (fill_area.coord_e.y > p_drv->lcd_param->height)
+        || (fill_area.width > p_drv->lcd_param->width))
+    {
+        return -EINVAL;
+    }    
+    
 	uint16_t i;
 	uint16_t xlen=0;
     uint8_t buf[320*2];
 
     for (i = 0; i < (p_drv->lcd_param->width)*2; i += 2)
     {
-        buf[i] = (color >> 8);
-        buf[i+1] = (color & 0xff);
+        buf[i] = (fill_area.color >> 8);
+        buf[i+1] = (fill_area.color & 0xff);
     }
 
-    xlen = ex - sx + 1;	 
-    for (i = sy; i <= ey; i++)
+    xlen = fill_area.coord_e.x - fill_area.coord_s.x + 1;	 
+    for (i = fill_area.coord_s.y; i <= fill_area.coord_e.y; i++)
     {
-        LCD_SetCursor(p_drv, sx, i);      				//设置光标位置 
+        LCD_SetCursor(p_drv, fill_area.coord_s.x, i);      				//设置光标位置 
         LCD_WriteRAM_Prepare(p_drv);     			//开始写入GRAM	
         p_drv->write_burst_data(p_drv->dev, buf, xlen*2); 
     }	 
 
     return 0;
 } 
+
 
 /**
  * @brief  画线粗为1像素的线
@@ -326,23 +411,37 @@ int LCD_Fill(driver_info_t *p_drv, uint16_t sx, uint16_t sy, uint16_t ex, uint16
  * 
  * @retval no return
  */
-int LCD_DrawUnitLine(driver_info_t *p_drv, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color)
+int LCD_DrawUnitLine(driver_info_t *p_drv, line_info_t line)
 {
+    IS_NULL(p_drv);
+
+    if ((line.coord_s.x > p_drv->lcd_param->width) 
+        || (line.coord_s.y > p_drv->lcd_param->height)
+        || (line.coord_e.x > p_drv->lcd_param->width) 
+        || (line.coord_e.y > p_drv->lcd_param->height)
+        || (line.width > p_drv->lcd_param->width))
+    {
+        return -EINVAL;
+    }   
+
 	uint16_t t; 
 	int xerr = 0, yerr = 0, delta_x, delta_y, distance; 
 	int incx, incy, uRow, uCol; 
-	delta_x = x2 - x1;                          //计算坐标增量 
-	delta_y = y2 - y1; 
-	uRow = x1; 
-	uCol = y1; 
+    point_info_t point;
+
+	delta_x = line.coord_e.x - line.coord_s.x;                          //计算坐标增量 
+	delta_y = line.coord_e.y - line.coord_s.y;
+	uRow = line.coord_s.x; 
+	uCol = line.coord_s.y; 
+    point.color   = line.color;
 
 	if (delta_x > 0)
     {
-        incx=1;                                 //设置单步方向 
+        incx = 1;                                 //设置单步方向 
     }
 	else if (delta_x == 0)
     {
-        incx = 0;//垂直线 
+        incx = 0;                                 //垂直线 
     }
 	else 
     {
@@ -375,7 +474,9 @@ int LCD_DrawUnitLine(driver_info_t *p_drv, uint16_t x1, uint16_t y1, uint16_t x2
 
 	for (t = 0; t <= distance + 1; t++)             //画线输出 
 	{  
-		LCD_DrawPoint(p_drv, uRow, uCol, color);//画点 
+        point.coord.x = uRow;
+        point.coord.y = uCol;
+		LCD_DrawPoint(p_drv, point);//画点 
 		xerr += delta_x; 
 		yerr += delta_y; 
 
@@ -405,30 +506,51 @@ int LCD_DrawUnitLine(driver_info_t *p_drv, uint16_t x1, uint16_t y1, uint16_t x2
  * 
  * @retval [description] 
  */
-int LCD_DrawLine(driver_info_t *p_drv, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t width, uint16_t color)
+int LCD_DrawLine(driver_info_t *p_drv, line_info_t line)
 {
-    uint16_t delta_x = x2-x1;
-    uint16_t delta_y = y2-y1;
+    IS_NULL(p_drv);
 
-    for (uint8_t i = 0; i < width; i++)
+    if ((line.coord_s.x > p_drv->lcd_param->width) 
+        || (line.coord_s.y > p_drv->lcd_param->height)
+        || (line.coord_e.x > p_drv->lcd_param->width) 
+        || (line.coord_e.y > p_drv->lcd_param->height)
+        || (line.width > p_drv->lcd_param->width))
+    {
+        return -EINVAL;
+    } 
+
+    uint16_t delta_x = line.coord_e.x-line.coord_s.x;
+    uint16_t delta_y = line.coord_e.y-line.coord_s.y;
+    line_info_t tmp;
+    tmp = line;
+    tmp.width = 1;
+
+    for (uint8_t i = 0; i < line.width; i++)
     {
         if (delta_y == 0)
         {
-            LCD_DrawUnitLine(p_drv, x1, y1+i, x2, y2+i, color);
+            tmp.coord_s.y = line.coord_s.y + i;
+            tmp.coord_e.y = line.coord_e.y + i;
+            LCD_DrawUnitLine(p_drv, tmp);
         }
         else if (delta_x == 0)
         {
-            LCD_DrawUnitLine(p_drv, x1+i, y1, x2+i, y2, color);
+            tmp.coord_s.x = line.coord_s.x + i;
+            tmp.coord_e.x = line.coord_e.x + i;
+            LCD_DrawUnitLine(p_drv, tmp);
         }
         else
         {
             // TODO: 斜线增粗有点缺陷
-            LCD_DrawUnitLine(p_drv, x1, y1+i, x2, y2+i, color);
+            tmp.coord_s.y = line.coord_s.y + i;
+            tmp.coord_e.y = line.coord_e.y + i;
+            LCD_DrawUnitLine(p_drv, tmp);
         }
     }
 
     return 0;
 }
+
 
 /**
  * @brief  画矩形
@@ -441,66 +563,126 @@ int LCD_DrawLine(driver_info_t *p_drv, uint16_t x1, uint16_t y1, uint16_t x2, ui
  * 
  * @retval no return
  */
-int LCD_DrawRectangle(driver_info_t *p_drv, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t width, uint16_t color)
+int LCD_DrawRectangle(driver_info_t *p_drv, rect_info_t rect)
 {
+    IS_NULL(p_drv);
+
+    if ((rect.coord_s.x > p_drv->lcd_param->width) 
+        || (rect.coord_s.y > p_drv->lcd_param->height)
+        || (rect.coord_e.x > p_drv->lcd_param->width) 
+        || (rect.coord_e.y > p_drv->lcd_param->height)
+        || (rect.width > p_drv->lcd_param->width))
+    {
+        return -EINVAL;
+    } 
+
+    line_info_t line;
+    uint16_t x1 = rect.coord_s.x;
+    uint16_t x2 = rect.coord_e.x;
+    uint16_t y1 = rect.coord_s.y;
+    uint16_t y2 = rect.coord_e.y;
+    uint8_t width = rect.width;
+
     if (((x1 + width) > (x2 - width)) || (y1 + width) > (y2 - width))
     {
         return -1;
     }
 
+    line.width = 1;
+    line.color = rect.color;
     for (uint8_t i = 0; i < width; i++)
     {
-        LCD_DrawLine(p_drv, x1, y1+i, x2, y1+i, 1, color);
-        LCD_DrawLine(p_drv, x1+i, y1, x1+i, y2, 1, color);
-        LCD_DrawLine(p_drv, x1, y2-i, x2, y2-i, 1, color);
-        LCD_DrawLine(p_drv, x2-i, y1, x2-i, y2, 1, color);
+        line.coord_s.x = rect.coord_s.x;
+        line.coord_e.x = rect.coord_e.x;
+        line.coord_s.y = rect.coord_s.y + i;
+        line.coord_e.y = rect.coord_s.y + i;
+        LCD_DrawLine(p_drv, line);              // 上
+
+        line.coord_s.y = rect.coord_s.y;
+        line.coord_e.y = rect.coord_e.y;
+        line.coord_s.x = rect.coord_s.x + i;
+        line.coord_e.x = rect.coord_s.x + i;
+        LCD_DrawLine(p_drv, line);              // 左
+
+        line.coord_s.x = rect.coord_s.x;
+        line.coord_e.x = rect.coord_e.x;
+        line.coord_s.y = rect.coord_e.y - i;
+        line.coord_e.y = rect.coord_e.y - i;
+        LCD_DrawLine(p_drv, line);              // 下
+
+        line.coord_s.y = rect.coord_s.y;
+        line.coord_e.y = rect.coord_e.y;
+        line.coord_s.x = rect.coord_e.x - i;
+        line.coord_e.x = rect.coord_e.x - i;
+        LCD_DrawLine(p_drv, line);              // 右
     }
 
     return 0;
 }
 
+
 /**
  * @brief  按百分比块填充
  * 
  * @param[i] p_drv              驱动设备结构体 
- * @param[i] (x1, y1)(x2, y2)   块的对角坐标
+ * @param[i] (x1, y1)(x2, y2)   矩形的对角坐标
  * @param[i] color              填充块颜色
  * @param[i] rate               填充百分比
  * @param[i] coord_x_end        保留上次的横轴终止坐标
  * 
  * @retval [description] 
  */
-int LCD_FillRectanglePercent(driver_info_t *p_drv, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color, uint8_t rate, uint16_t *coord_x_end)
+int LCD_FillRectanglePercent(driver_info_t *p_drv, rect_dynamic_info_t *p_rect)
 {
-    uint16_t x_end = x1 + (x2-x1)*rate/100;
+    IS_NULL(p_drv);
+    IS_NULL(p_rect->rect);
 
-    *coord_x_end = (*coord_x_end > x1) ? *coord_x_end : x1;
-
-    if (x_end == RECT_X_START)
+    if ((p_rect->rate > 100) || (p_rect->end_x > p_drv->lcd_param->width))
     {
-        x_end += RECT_LINE_WIDTH;
+        return -EINVAL;
+    } 
+
+    fill_area_info_t fill;
+    uint16_t x_end = p_rect->rect->coord_s.x + 
+                     (p_rect->rect->coord_e.x - p_rect->rect->coord_s.x)*p_rect->rate/100;
+
+    p_rect->end_x = (p_rect->end_x > p_rect->rect->coord_s.x) ? p_rect->end_x : p_rect->rect->coord_s.x;
+    p_rect->rate = ((p_rect->rate > 100) ? 100 : p_rect->rate);
+
+    if (x_end == p_rect->rect->coord_s.x)
+    {
+        x_end += p_rect->rect->width;
     }
 
-    if (x_end == RECT_X_END)
+    if (x_end == p_rect->rect->coord_e.x)
     {
-        x_end -= RECT_LINE_WIDTH;
+        x_end -= p_rect->rect->width;
     }
 
-    rate = ((rate > 100) ? 100 : rate);
+    fill.coord_s.y = p_rect->rect->coord_s.y + p_rect->rect->width;
+    fill.coord_e.y = p_rect->rect->coord_e.y - p_rect->rect->width;
 
     // (x_new x_old)对这个区间进行填充/清屏操作
-    if (x_end < *coord_x_end)
+    if (x_end < p_rect->end_x)
     {
-        LCD_Fill(p_drv, x_end, y1+RECT_LINE_WIDTH, *coord_x_end, y2-RECT_LINE_WIDTH, BLACK);
+        fill.coord_s.x = x_end;
+        fill.coord_e.x = p_rect->end_x;
+        fill.color = BLACK;
+        LCD_Fill(p_drv, fill);
     }
     else
     {
-        LCD_Fill(p_drv, *coord_x_end, y1+RECT_LINE_WIDTH, x_end, y2-RECT_LINE_WIDTH, color);
+        fill.coord_s.x = p_rect->end_x;
+        fill.coord_e.x = x_end;
+        fill.color = p_rect->rect->color;
+        LCD_Fill(p_drv, fill);
     }
 
-    *coord_x_end = x_end;
+    p_rect->end_x = x_end;
     return 0;
 }
+
+
 
 /**
  * @brief  画直角三角形， 仅限直角在右下方种类
@@ -514,25 +696,55 @@ int LCD_FillRectanglePercent(driver_info_t *p_drv, uint16_t x1, uint16_t y1, uin
  * 
  * @retval [description] 
  */
-int LCD_DrawTriangle(driver_info_t *p_drv, uint16_t x, uint16_t y, uint16_t base, uint16_t height, uint8_t width, uint16_t color)
+int LCD_DrawTriangle(driver_info_t *p_drv, triangle_info_t triangle)
 {
+    IS_NULL(p_drv);
+
+    if ((triangle.coord.x > p_drv->lcd_param->width) 
+        || (triangle.coord.y > p_drv->lcd_param->height)
+        || (triangle.coord.x > p_drv->lcd_param->width) 
+        || (triangle.coord.y > p_drv->lcd_param->height)
+        || (triangle.base > p_drv->lcd_param->width) 
+        || (triangle.height > p_drv->lcd_param->height)
+        || (triangle.width > p_drv->lcd_param->width)
+        || (triangle.coord.x + triangle.base > p_drv->lcd_param->width)
+        || (triangle.coord.y - triangle.height < 0))
+    {
+        return -EINVAL;
+    } 
+
     // 三个坐标(x, y), (x+base, y), (x+base, y-height)
     lcd_dev_t *lcddev = p_drv->lcd_param;
-    if ((x + base > lcddev->width) || (y-height < 0) || (x > lcddev->width) || (y > lcddev->height))
+    line_info_t line;
+
+    line.width = 1;
+    line.color = triangle.color;
+    for (uint8_t i = 0; i < triangle.width; i++)
     {
-        return -1;
+        line.coord_s.x = triangle.coord.x;
+        line.coord_s.y = triangle.coord.y + i;
+        line.coord_e.x = triangle.coord.x + triangle.base;
+        line.coord_e.y = triangle.coord.y + i;
+        LCD_DrawLine(p_drv, line);
+
+        line.coord_s.x = triangle.coord.x + triangle.base - i;
+        line.coord_s.y = triangle.coord.y;
+        line.coord_e.x = triangle.coord.x + triangle.base - i;
+        line.coord_e.y = triangle.coord.y - triangle.height;
+        LCD_DrawLine(p_drv, line);
     }
 
-    for (uint8_t i = 0; i < width; i++)
-    {
-        LCD_DrawLine(p_drv, x, y+i, (x+base), y+i, 1, color);
-        LCD_DrawLine(p_drv, (x+base-i), y, (x+base-i), (y-height), 1, color);
-        LCD_DrawLine(p_drv, x+i, y+i, (x+base), (y-height+i), 1, color);
-    }
-    LCD_DrawLine(p_drv, x, y, (x+base), (y-height), width, color);
+    line.coord_s.x = triangle.coord.x;
+    line.coord_s.y = triangle.coord.y;
+    line.coord_e.x = triangle.coord.x + triangle.base;
+    line.coord_e.y = triangle.coord.y - triangle.height;
+    line.width = triangle.width;
+    LCD_DrawLine(p_drv, line);
 
     return 0;
 }
+
+
 
 /**
  * @brief  按百分比填充三角形
@@ -546,20 +758,37 @@ int LCD_DrawTriangle(driver_info_t *p_drv, uint16_t x, uint16_t y, uint16_t base
  * 
  * @retval [description] 
  */
-int LCD_FillTriangle(driver_info_t *p_drv,  uint16_t x, uint16_t y, uint16_t base, uint16_t height, uint8_t rate, uint16_t color)
+int LCD_FillTriangle(driver_info_t *p_drv,  triangle_fill_info_t *tri_fill)
 {
+    IS_NULL(p_drv);
+    IS_NULL(tri_fill->triangle);
+
+    if (tri_fill->rate > 100) 
+    {
+        return -EINVAL;
+    } 
+
+    line_info_t line;
     // 斜边的表达式
-    int16_t k = -1 * height * 10 / base;
-    uint32_t b = y - k * x /10;
-    uint16_t x_end = base * rate / 100;
+    uint8_t comp = 10;      // 补偿系数，否则计算唔差大
+    int16_t k = -1 * tri_fill->triangle->height * comp / tri_fill->triangle->base;
+    uint32_t b = tri_fill->triangle->coord.y - k * tri_fill->triangle->coord.x /comp;
+    uint16_t x_end = tri_fill->triangle->base * tri_fill->rate / 100;
     
+    line.color = tri_fill->triangle->color;
+    line.width = 1;
     for (uint16_t i = 0; i < x_end; i++)
     {
-        LCD_DrawLine(p_drv, x+i, y, x+i, (k*(x+i)/10+b), 1, color);
+        line.coord_s.x = tri_fill->triangle->coord.x + i;
+        line.coord_s.y = tri_fill->triangle->coord.y;
+        line.coord_e.x = tri_fill->triangle->coord.x + i;
+        line.coord_e.y = k * (tri_fill->triangle->coord.x + i)/comp+b;
+        LCD_DrawLine(p_drv, line);
     }
 
     return 0;
 }
+
 
 /**
  * @brief  显示bmp图片
@@ -573,38 +802,49 @@ int LCD_FillTriangle(driver_info_t *p_drv,  uint16_t x, uint16_t y, uint16_t bas
  * 
  * @retval int 
  */
-int LCD_ShowBMP(driver_info_t *p_drv,  uint16_t x, uint16_t y, uint16_t size, uint16_t height, const unsigned char *bmp, uint16_t color)
+int LCD_ShowBMP(driver_info_t *p_drv, bmp_info_t bmp_info)
 {
-    uint16_t y0 = y;
+    IS_NULL(p_drv);
+    if ((bmp_info.coord.x > p_drv->lcd_param->width) 
+        || (bmp_info.coord.y > p_drv->lcd_param->height)
+        || (bmp_info.height > p_drv->lcd_param->height))
+    {
+        return -EINVAL;
+    } 
+
+    uint16_t y0 = bmp_info.coord.y;
     uint16_t i, k = 0;
     uint8_t tmp;
-    uint16_t tmp_color = p_drv->point_color;
     lcd_dev_t *lcddev = p_drv->lcd_param;
-    p_drv->point_color = color;
+    point_info_t point;
 
-    for (i = 0; i < size; i++)
+    point.color = bmp_info.color;
+
+    for (i = 0; i < bmp_info.size; i++)
     {
-        tmp = bmp[i];
+        tmp = bmp_info.bmp[i];
 
         for (k = 0; k < 8; k++)
         {
             if (tmp & 0x80)
             {
-                LCD_DrawPoint(p_drv, x, y, p_drv->point_color);
+                point.coord.x = bmp_info.coord.x;
+                point.coord.y = bmp_info.coord.y;
+                LCD_DrawPoint(p_drv, point);
             }
             
             tmp <<= 1;
-            y++;
-            if (y > lcddev->height)
+            bmp_info.coord.y++;
+            if (bmp_info.coord.y > lcddev->height)
             {
                 return -1;
             }
 
-            if ((y - y0) >= height)
+            if ((bmp_info.coord.y - y0) >= bmp_info.height)
             {
-                x++;
-                y = y0;
-                if (x > lcddev->width)
+                bmp_info.coord.x++;
+                bmp_info.coord.y = y0;
+                if (bmp_info.coord.x > lcddev->width)
                 {
                     return -1;
                 }
@@ -612,7 +852,7 @@ int LCD_ShowBMP(driver_info_t *p_drv,  uint16_t x, uint16_t y, uint16_t size, ui
             }
         }
     }
-    p_drv->point_color = tmp_color;
 
     return 0;
 }
+
