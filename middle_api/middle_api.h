@@ -16,5 +16,6 @@
 #include "mid_adc.h"
 #include "mid_gpio.h"
 #include "mid_systick.h"
+#include "mid_usart.h"
 
 #endif
