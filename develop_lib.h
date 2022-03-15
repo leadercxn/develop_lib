@@ -5,6 +5,10 @@
 #include "ft_lib.h"
 #endif
 
+#ifdef HK32
+#include "hk_lib.h"
+#endif
+
 #include "middle_api.h"
 #include "hardware.h"
 #include "third_lib.h"

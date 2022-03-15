@@ -2,6 +2,7 @@
 #include "ft_lib.h"
 #endif
 
+#include "board_config.h"
 #include "mid_delay.h"
 
 void delay_us(uint16_t us)
