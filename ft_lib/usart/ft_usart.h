@@ -56,4 +56,6 @@ void ft_uart_init(uint8_t uart_id, ft_uart_info_t uart_info, ft_uart_config_t co
 
 void ft_uart_put(uint8_t uart_id, char ch);
 
+uint16_t ft_uart_get(uint8_t uart_id);
+
 #endif
