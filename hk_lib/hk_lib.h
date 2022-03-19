@@ -7,6 +7,8 @@
 
 #include "hk_gpio.h"
 #include "hk_systick.h"
+#include "hk_usart.h"
+#include "hk_i2c.h"
 
 #endif
 

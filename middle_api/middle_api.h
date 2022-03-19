@@ -6,7 +6,7 @@
 
 //#include "tft_8080.h"
 //#include "mid_bk953x.h"
-//#include "trace.h"
+#include "trace.h"
 //#include "mid_pwm.h"
 //#include "ir_tx_encode.h"
 //#include "ir_rx_decode.h"
@@ -15,5 +15,8 @@
 //#include "mid_adc.h"
 #include "mid_gpio.h"
 #include "mid_systick.h"
+
+#include "mid_kt0656.h"
+#include "mid_kt0646.h"
 
 #endif

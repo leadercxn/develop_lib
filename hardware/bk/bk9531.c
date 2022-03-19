@@ -34,7 +34,7 @@ bk953x_reg_value_t g_bk9531_init_config[] = {
     {0x00 , 0x1C440C88},
     {0x01 , 0x04CF0057},
     {0x02 , 0x8990E02F},
-//    {0x03 , 0x341206FF},    //UBAND,
+//  {0x03 , 0x341206FF},    //UBAND,
     {0x03 , 0x341236FF},    //for cxn test U段,6分频
     {0x04 , 0x53880044},
     {0x05 , 0x00280380},

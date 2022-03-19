@@ -1,9 +1,5 @@
 #include "stdbool.h"
 
-#ifdef FT32
-#include "ft_lib.h"
-#endif
-
 #include "board_config.h"
 #include "trace.h"
 
@@ -15,25 +11,25 @@
 
 void trace_init(void)
 {
-    ft_uart_info_t uart_info;
-    ft_uart_config_t uart_config;
+    hk_uart_info_t      uart_info;
+    hk_uart_config_t    uart_config;
 
-    uart_info.uart = FT_UART1;
-    uart_info.tx_port = FT_UART1_TX_GPIO_PORT;
-    uart_info.rx_port = FT_UART1_RX_GPIO_PORT;
+    uart_info.uart =    TRACE_UART;
+    uart_info.tx_port = TRACE_UART_TX_GPIO_PORT;
+    uart_info.rx_port = TRACE_UART_RX_GPIO_PORT;
 
-    uart_info.clk = RCC_APB2Periph_USART1;
-    uart_info.tx_clk = FT_UART1_TX_GPIO_CLK;
-    uart_info.rx_clk = FT_UART1_RX_GPIO_CLK;
+    uart_info.clk =     TRACE_UART_CLK;
+    uart_info.tx_clk =  TRACE_UART_TX_GPIO_CLK;
+    uart_info.rx_clk =  TRACE_UART_RX_GPIO_CLK;
 
-    uart_info.tx_pin = FT_UART1_TX_PIN;
-    uart_info.rx_pin = FT_UART1_RX_PIN;
+    uart_info.tx_pin = TRACE_UART_TX_PIN;
+    uart_info.rx_pin = TRACE_UART_RX_PIN;
 
-    uart_info.tx_pin_source = FT_UART1_TX_SOURCE;
-    uart_info.rx_pin_source = FT_UART1_RX_SOURCE;
+    uart_info.tx_pin_source = TRACE_UART_TX_SOURCE;
+    uart_info.rx_pin_source = TRACE_UART_RX_SOURCE;
 
-    uart_info.tx_af = FT_UART1_TX_AF;
-    uart_info.rx_af = FT_UART1_RX_AF;
+    uart_info.tx_af = TRACE_UART_TX_AF;
+    uart_info.rx_af = TRACE_UART_RX_AF;
 
     uart_config.baudrate = 115200;
     uart_config.databits = USART_WordLength_8b;
@@ -43,7 +39,7 @@ void trace_init(void)
     uart_config.mode = USART_Mode_Rx | USART_Mode_Tx;
     uart_config.interrupt_priority = 0;
 
-    ft_uart_init(0, uart_info, &uart_config);
+    hk_uart_init(uart_info, &uart_config);
 }
 
 void trace_dump(void *p_buffer, uint32_t len)
