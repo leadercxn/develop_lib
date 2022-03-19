@@ -1,8 +1,8 @@
 #include "stdbool.h"
 #include "string.h"
 
-#ifdef FT32
-#include "ft_lib.h"
+#ifdef F0
+#include "f0_lib.h"
 #endif
 
 #include "trace.h"
@@ -23,7 +23,7 @@ typedef enum{
 } ir_tx_op_type_e;
 
 //初始化宏
-#ifdef FT32 
+#ifdef F0 
 #define PWM_INIT(freq,duty)  \
 {                           \
     timer15_ch1_pwm_init(freq,duty);   \
@@ -35,7 +35,7 @@ typedef enum{
 #endif
 
 //PWM使能宏
-#ifdef FT32 
+#ifdef F0 
 #define PWM_OUT_ENABLE(status)  \
 {                           \
     timer15_ch1_pwn_output_enable_set(status);   \

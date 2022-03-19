@@ -1,6 +1,6 @@
 
-#ifdef FT32
-#include "ft_lib.h"
+#ifdef F0
+#include "f0_lib.h"
 #endif
 
 #include "tft_8080.h"

@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef FT32
-#include "ft_lib.h"
+#ifdef F0
+#include "f0_lib.h"
 #endif
 
 #include "board_config.h"
@@ -16,6 +16,7 @@
 #include "lib_error.h"
 
 #include "mid_timer.h"
+
 
 #define SCHED_TIMER_MAX_EVENT_DATA_SIZE   8
 #define SCHED_TIMER_QUEUE_SIZE            20
@@ -98,10 +99,10 @@ static void per_ms_timer_handler(void)
 #if 0
     static uint64_t old_tick = 0;
 
-    if((ft_timer_tick_get() - old_tick ) > 500)
+    if((f0_timer_tick_get() - old_tick ) > 500)
     {
-        trace_debug("timer tick %llu\n\r",ft_timer_tick_get());
-        old_tick = ft_timer_tick_get();
+        trace_debug("timer tick %llu\n\r",f0_timer_tick_get());
+        old_tick = f0_timer_tick_get();
     }
 #endif
 
@@ -126,7 +127,7 @@ static void timer_node_add(timer_node_id_t timer_id)
 void mid_timer_init(void)
 {
 
-#ifdef FT32
+#ifdef F0
     /* 初始化定时器，并将定时器毁掉 */
     timer3_init();
     timer_handler_register(per_ms_timer_handler);
@@ -210,8 +211,8 @@ int mid_timer_stop(timer_node_id_t timer_id)
 
 uint64_t mid_timer_ticks_get(void)
 {
-#ifdef FT32
-    return ft_timer_tick_get();
+#ifdef F0
+    return f0_timer_tick_get();
 #endif
 }
 

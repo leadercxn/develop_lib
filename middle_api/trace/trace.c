@@ -11,8 +11,8 @@
 
 void trace_init(void)
 {
-    hk_uart_info_t      uart_info;
-    hk_uart_config_t    uart_config;
+    f0_uart_info_t      uart_info;
+    f0_uart_config_t    uart_config;
 
     uart_info.uart =    TRACE_UART;
     uart_info.tx_port = TRACE_UART_TX_GPIO_PORT;
@@ -39,7 +39,7 @@ void trace_init(void)
     uart_config.mode = USART_Mode_Rx | USART_Mode_Tx;
     uart_config.interrupt_priority = 0;
 
-    hk_uart_init(uart_info, &uart_config);
+    f0_uart_init(uart_info, &uart_config);
 }
 
 void trace_dump(void *p_buffer, uint32_t len)

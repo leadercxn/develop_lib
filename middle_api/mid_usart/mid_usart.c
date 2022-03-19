@@ -10,8 +10,8 @@ int usart_init(usart_object_t *p_usart_object)
 
     int err_code = 0;
 
-#ifdef FT32
-    ft_uart_init(p_usart_object->id, *(p_usart_object->uart_info), p_usart_object->uart_config);
+#ifdef F0
+    f0_uart_init(*(p_usart_object->uart_info), p_usart_object->uart_config);
 #endif
 
     return err_code;
@@ -26,8 +26,8 @@ int usart_put_char(usart_object_t *p_usart_object, char ch)
 
     int err_code = 0;
 
-#ifdef FT32
-    ft_uart_put(p_usart_object->id, ch);
+#ifdef F0
+    f0_uart_put(p_usart_object->id, ch);
 #endif
 
     return err_code;
@@ -42,10 +42,10 @@ int usart_put_string(usart_object_t *p_usart_object, const char *s)
 
     int err_code = 0;
 
-#ifdef FT32
+#ifdef F0
     while (*s != '\0')
     {
-        ft_uart_put(p_usart_object->id, *s++);
+        f0_uart_put(p_usart_object->id, *s++);
     }
 #endif
 
@@ -62,8 +62,8 @@ uint16_t usart_get_char(usart_object_t *p_usart_object)
     int err_code = 0;
     uint16_t data;
 
-#ifdef FT32
-    data = ft_uart_get(p_usart_object->id);
+#ifdef F0
+    data = f0_uart_get(p_usart_object->id);
 #endif
 
     return data;

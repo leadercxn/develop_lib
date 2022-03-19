@@ -10,10 +10,10 @@ int mid_flash_write(uint32_t address, uint16_t len, uint8_t *p_data)
         return -EINVAL;
     }
 
-#ifdef FT32
+#ifdef F0
     uint16_t word_len = len / 4;
 
-    err_code = ft_flash_write_word(address, word_len, (uint32_t *)p_data);
+    err_code = f0_flash_write_word(address, word_len, (uint32_t *)p_data);
     if(err_code)
     {
         return -err_code;
@@ -33,8 +33,8 @@ int mid_flash_read(uint32_t address, uint16_t len, uint8_t *p_data)
     {
         return -EINVAL;
     }
-#ifdef FT32
-    err_code = ft_flash_read(address, len, p_data);
+#ifdef F0
+    err_code = f0_flash_read(address, len, p_data);
     if(err_code)
     {
         return -err_code;

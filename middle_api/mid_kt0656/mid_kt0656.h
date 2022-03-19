@@ -4,12 +4,8 @@
 typedef struct 
 {
     i2c_type_e      i2c_type;
-#ifdef  FT32
-    ft_virt_i2c_t   virt_i2c_object;
-#endif
-
-#ifdef  HK32
-    hk_virt_i2c_t   virt_i2c_object;
+#ifdef  F0
+    f0_virt_i2c_t   virt_i2c_object;
 #endif
 
 } mid_kt0656_t;

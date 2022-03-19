@@ -1,5 +1,5 @@
-#ifdef FT32
-#include "ft_lib.h"
+#ifdef F0
+#include "f0_lib.h"
 #endif
 
 #include "board_config.h"
@@ -7,24 +7,14 @@
 
 void delay_us(uint16_t us)
 {
-#ifdef FT32
-    ft_delay_us(us);
+#ifdef F0
+    f0_delay_us(us);
 #endif
-
-#ifdef HK32
-    hk_delay_us(us);
-#endif
-
 }
 
 void delay_ms(uint16_t ms)
 {
-#ifdef FT32
-    ft_delay_ms(ms);
+#ifdef F0
+    f0_delay_ms(ms);
 #endif
-
-#ifdef HK32
-    hk_delay_ms(ms);
-#endif
-
 }

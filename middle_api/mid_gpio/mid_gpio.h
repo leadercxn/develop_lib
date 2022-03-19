@@ -1,6 +1,10 @@
 #ifndef __MID_GPIO_H
 #define __MID_GPIO_H
 
+#ifdef	 F0
+#include "f0_lib.h"
+#endif
+
 typedef enum
 {
     GPIO_DIR_OUTPUR,

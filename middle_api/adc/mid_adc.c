@@ -4,18 +4,18 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef FT32
-#include "ft_lib.h"
+#ifdef F0
+#include "f0_lib.h"
 #endif
 
 #include "board_config.h"
 #include "mid_adc.h"
 
 //ADC初始化宏
-#ifdef FT32 
+#ifdef F0 
 #define ADC_INIT()   \
 {                    \
-    ft_adc_init();   \
+    f0_adc_init();   \
 }
 #else
 

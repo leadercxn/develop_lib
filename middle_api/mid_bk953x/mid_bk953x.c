@@ -1,17 +1,17 @@
 #include "stdbool.h"
 
-#ifdef FT32
-#include "ft_lib.h"
+#ifdef F0
+#include "f0_lib.h"
 #endif
 
 #include "board_config.h"
 #include "mid_bk953x.h"
 
 
-#ifdef FT32
+#ifdef F0
 
 /* VIRT */
-static int ft_virt_i2c_bk953x_read_one_reg(ft_virt_i2c_t *p_ft_virt_i2c, uint8_t device_id, uint8_t reg, uint32_t *p_data)
+static int f0_virt_i2c_bk953x_read_one_reg(f0_virt_i2c_t *p_f0_virt_i2c, uint8_t device_id, uint8_t reg, uint32_t *p_data)
 {
     uint8_t temp = 0;
     uint8_t *p = (uint8_t *)p_data;
@@ -19,20 +19,20 @@ static int ft_virt_i2c_bk953x_read_one_reg(ft_virt_i2c_t *p_ft_virt_i2c, uint8_t
 
     temp = (reg << 1) | 0x01;
 
-    ft_virt_i2c_start(p_ft_virt_i2c);
+    f0_virt_i2c_start(p_f0_virt_i2c);
 
-    ft_virt_i2c_send_byte(p_ft_virt_i2c, device_id);
+    f0_virt_i2c_send_byte(p_f0_virt_i2c, device_id);
 
-    err = ft_virt_i2c_wait_ack(p_ft_virt_i2c);
+    err = f0_virt_i2c_wait_ack(p_f0_virt_i2c);
     if(err)
     {
         trace_error("slaver no ack!\n\r");
         return err;
     }
 
-    ft_virt_i2c_send_byte(p_ft_virt_i2c, temp);
+    f0_virt_i2c_send_byte(p_f0_virt_i2c, temp);
 
-    err = ft_virt_i2c_wait_ack(p_ft_virt_i2c);
+    err = f0_virt_i2c_wait_ack(p_f0_virt_i2c);
     if(err)
     {
         trace_error("slaver no ack!\n\r");
@@ -40,17 +40,17 @@ static int ft_virt_i2c_bk953x_read_one_reg(ft_virt_i2c_t *p_ft_virt_i2c, uint8_t
     }
 
     //MSB
-    p[3] = ft_virt_i2c_read_byte(p_ft_virt_i2c, true);
-    p[2] = ft_virt_i2c_read_byte(p_ft_virt_i2c, true);
-    p[1] = ft_virt_i2c_read_byte(p_ft_virt_i2c, true);
-    p[0] = ft_virt_i2c_read_byte(p_ft_virt_i2c, false);
+    p[3] = f0_virt_i2c_read_byte(p_f0_virt_i2c, true);
+    p[2] = f0_virt_i2c_read_byte(p_f0_virt_i2c, true);
+    p[1] = f0_virt_i2c_read_byte(p_f0_virt_i2c, true);
+    p[0] = f0_virt_i2c_read_byte(p_f0_virt_i2c, false);
 
-    ft_virt_i2c_stop(p_ft_virt_i2c);
+    f0_virt_i2c_stop(p_f0_virt_i2c);
 
     return err;
 }
 
-int ft_virt_i2c_bk953x_write_one_reg(ft_virt_i2c_t *p_ft_virt_i2c, uint8_t device_id,uint8_t reg,uint32_t *p_data)
+int f0_virt_i2c_bk953x_write_one_reg(f0_virt_i2c_t *p_f0_virt_i2c, uint8_t device_id,uint8_t reg,uint32_t *p_data)
 {
     uint8_t temp = 0;
     uint8_t *p = (uint8_t *)p_data;
@@ -59,19 +59,19 @@ int ft_virt_i2c_bk953x_write_one_reg(ft_virt_i2c_t *p_ft_virt_i2c, uint8_t devic
 
     temp = (reg << 1) & 0xfe;
 
-    ft_virt_i2c_start(p_ft_virt_i2c);
+    f0_virt_i2c_start(p_f0_virt_i2c);
 
-    ft_virt_i2c_send_byte(p_ft_virt_i2c, device_id);
-    err = ft_virt_i2c_wait_ack(p_ft_virt_i2c);
+    f0_virt_i2c_send_byte(p_f0_virt_i2c, device_id);
+    err = f0_virt_i2c_wait_ack(p_f0_virt_i2c);
     if(err)
     {
         trace_error("slaver no ack!\n\r");
         return err;
     }
 
-    ft_virt_i2c_send_byte(p_ft_virt_i2c, temp);
+    f0_virt_i2c_send_byte(p_f0_virt_i2c, temp);
 
-    err = ft_virt_i2c_wait_ack(p_ft_virt_i2c);
+    err = f0_virt_i2c_wait_ack(p_f0_virt_i2c);
     if(err)
     {
         return err;
@@ -79,8 +79,8 @@ int ft_virt_i2c_bk953x_write_one_reg(ft_virt_i2c_t *p_ft_virt_i2c, uint8_t devic
 
     for(i = sizeof(uint32_t); i > 0; i--)
     {
-        ft_virt_i2c_send_byte(p_ft_virt_i2c, p[i -1]);
-        err = ft_virt_i2c_wait_ack(p_ft_virt_i2c);
+        f0_virt_i2c_send_byte(p_f0_virt_i2c, p[i -1]);
+        err = f0_virt_i2c_wait_ack(p_f0_virt_i2c);
         if(err)
         {
             trace_error("slaver no ack!\n\r");
@@ -88,7 +88,7 @@ int ft_virt_i2c_bk953x_write_one_reg(ft_virt_i2c_t *p_ft_virt_i2c, uint8_t devic
         }
     }
 
-    ft_virt_i2c_stop(p_ft_virt_i2c);
+    f0_virt_i2c_stop(p_f0_virt_i2c);
 
     return err;
 }
@@ -101,8 +101,8 @@ int mid_bk953x_read_one_reg(mid_bk953x_t *p_mid_bk953x, uint8_t device_id, uint8
 {
     int err = 0;
 
-#ifdef FT32
-    err = ft_virt_i2c_bk953x_read_one_reg(&p_mid_bk953x->virt_i2c_object, device_id, reg, p_data);
+#ifdef F0
+    err = f0_virt_i2c_bk953x_read_one_reg(&p_mid_bk953x->virt_i2c_object, device_id, reg, p_data);
 #endif
 
     return err;
@@ -111,8 +111,8 @@ int mid_bk953x_read_one_reg(mid_bk953x_t *p_mid_bk953x, uint8_t device_id, uint8
 int mid_bk953x_write_one_reg(mid_bk953x_t *p_mid_bk953x, uint8_t device_id, uint8_t reg, uint32_t *p_data)
 {
     int err = 0;
-#ifdef FT32
-    err = ft_virt_i2c_bk953x_write_one_reg(&p_mid_bk953x->virt_i2c_object, device_id, reg, p_data);
+#ifdef F0
+    err = f0_virt_i2c_bk953x_write_one_reg(&p_mid_bk953x->virt_i2c_object, device_id, reg, p_data);
 #endif
     return err;
 }
@@ -120,8 +120,8 @@ int mid_bk953x_write_one_reg(mid_bk953x_t *p_mid_bk953x, uint8_t device_id, uint
 
 void mid_bk953x_res_init(mid_bk953x_t *p_mid_bk953x)
 {
-#ifdef FT32
-    ft_virt_i2c_init(&p_mid_bk953x->virt_i2c_object);
+#ifdef F0
+    f0_virt_i2c_init(&p_mid_bk953x->virt_i2c_object);
 #endif
 
 }

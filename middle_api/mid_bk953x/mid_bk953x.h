@@ -1,6 +1,10 @@
 #ifndef __MID_BK953X_H
 #define __MID_BK953X_H
 
+#ifdef F0
+#include "f0_lib.h"
+#endif
+
 typedef enum
 {
     I2C_TYPE_I2C1,
@@ -14,8 +18,8 @@ typedef enum
 typedef struct 
 {
     i2c_type_e      i2c_type;
-#ifdef FT32
-    ft_virt_i2c_t   virt_i2c_object;
+#ifdef F0
+    f0_virt_i2c_t   virt_i2c_object;
 #endif
 
 } mid_bk953x_t;

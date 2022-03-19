@@ -1,15 +1,15 @@
 #include "stdbool.h"
 #include "string.h"
 
-#ifdef FT32
-#include "ft_lib.h"
+#ifdef F0
+#include "f0_lib.h"
 #endif
 
 #include "board_config.h"
 #include "ir_rx_decode.h"
 
 //EXIT外部中断初始化
-#ifdef FT32 
+#ifdef F0 
 #define EXIT_INIT()         \
 {                           \
     exit_init();            \
@@ -21,7 +21,7 @@
 #endif
 
 //EXIT外部中断使能宏
-#ifdef FT32 
+#ifdef F0 
 #define EXIT_IRQ_ENABLE(status)     \
 {                                   \
     exit_irq_enable_set(status);    \
@@ -211,7 +211,7 @@ void ir_rx_init(void)
 {
     EXIT_INIT();
 
-#ifdef FT32
+#ifdef F0
     // 注册到外部中断层
     exit_irq_handler_register(exit_irq_handler);
 #endif

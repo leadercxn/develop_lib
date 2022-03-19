@@ -4,14 +4,9 @@
 
 void mid_system_tick_init(void)
 {
-#ifdef FT32
-    ft_systick_init();
+#ifdef F0
+    f0_systick_init();
 #endif
-
-#ifdef HK32
-    hk_systick_init();
-#endif
-
 }
 
 
