@@ -6,7 +6,6 @@
 #include <stdio.h>
 
 #include "mid_gpio.h"
-// #include "ft32f0xx.h"
 
 
 #define RECT_X_START    120         // 动态显示框左边坐标
