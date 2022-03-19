@@ -1,6 +1,6 @@
 #include "hk_systick.h"
 
-static uint16_t sysclk = 288;	//还不确定为啥是 72*4 才可以较为精准的延时
+static uint16_t sysclk = 72;
 static uint32_t fac_us = 0;
 static uint32_t fac_ms = 0;
 

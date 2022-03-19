@@ -11,7 +11,7 @@
 
 #include "middle_api.h"
 #include "hardware.h"
-#include "third_lib.h"
+//#include "third_lib.h"
 
 #endif
 

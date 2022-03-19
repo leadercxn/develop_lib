@@ -10,6 +10,11 @@ void delay_us(uint16_t us)
 #ifdef FT32
     ft_delay_us(us);
 #endif
+
+#ifdef HK32
+    hk_delay_us(us);
+#endif
+
 }
 
 void delay_ms(uint16_t ms)
@@ -17,4 +22,9 @@ void delay_ms(uint16_t ms)
 #ifdef FT32
     ft_delay_ms(ms);
 #endif
+
+#ifdef HK32
+    hk_delay_ms(ms);
+#endif
+
 }
