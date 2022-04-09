@@ -14,6 +14,8 @@ extern "C"
 
 #ifdef F0
 #include "f0_lib.h"
+#elif defined F1
+#include "f1_lib.h"
 #endif
 
 
