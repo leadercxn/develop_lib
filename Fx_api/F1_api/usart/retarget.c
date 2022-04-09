@@ -4,6 +4,8 @@
 
 #ifdef F0
 #include "f0_lib.h"
+#elif defined F1
+#include "f1_lib.h"
 #endif
 
 
@@ -29,7 +31,11 @@ int fputc(int ch, FILE *p_file)
 {
   UNUSED_PARAMETER(p_file);
 
-  UNUSED_VARIABLE(f0_uart_put(F0_UART_1, (uint8_t)ch));
+#ifdef F0
+  UNUSED_VARIABLE(f0_uart_put(F0_UART_0, (uint8_t)ch));
+#elif defined F1
+  UNUSED_VARIABLE(f1_uart_put(F1_UART_1, (uint8_t)ch));
+#endif
 
   return ch;
 }

@@ -17,8 +17,15 @@
  */
 enum f0_uart_id_t
 {
-    F0_UART_0 = 0, ///< UART 0.
-    F0_UART_1,     ///< UART 1.
+    F0_UART_1 = 0, ///< USART1.
+    F0_UART_2,     ///< USART2.
+    F0_UART_3,     ///< UART 3.
+    F0_UART_4,     ///< UART 4.
+    F0_UART_5,     ///< UART 5.
+    F0_UART_6,     ///< UART 6.
+    F0_UART_7,     ///< UART 7.
+    F0_UART_8,     ///< UART 8.
+    F0_UART_MAX
 };
 
 typedef struct
@@ -41,6 +48,8 @@ typedef struct
 
     uint16_t tx_af;
     uint16_t rx_af;
+
+    uint8_t uart_id;
 } f0_uart_info_t;
 
 /**

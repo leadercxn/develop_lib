@@ -10,6 +10,13 @@
 #include "hk32f0xx.h"
 #endif
 
+static USART_TypeDef *m_usart_array[F0_UART_MAX] = 
+{USART1, USART2, 
+#ifdef HK32F0
+USART3, USART4, USART5, USART6, USART7, USART8
+#endif
+};
+
 /**
   * @brief  Configures COM port.
   * @param  uart_id: Specifies the COM port to be configured.
@@ -29,9 +36,16 @@ void f0_uart_init(f0_uart_info_t uart_info, f0_uart_config_t const *p_config)
     RCC_AHBPeriphClockCmd(uart_info.tx_clk | uart_info.rx_clk, ENABLE);
 
     /* Enable USART clock 不同串口不同的外设时钟 */
-    //RCC_APB1PeriphClockCmd(uart_info.clk, ENABLE);
+    if ((F0_UART_1 == uart_info.uart_id) || (F0_UART_6 == uart_info.uart_id) 
+     || (F0_UART_7 == uart_info.uart_id) || (F0_UART_8 == uart_info.uart_id))
+    {
+        RCC_APB2PeriphClockCmd(uart_info.clk, ENABLE);
+    }
+    else
+    {
+        RCC_APB1PeriphClockCmd(uart_info.clk, ENABLE);
+    }
 
-    RCC_APB2PeriphClockCmd(uart_info.clk, ENABLE);
 
     /* Connect PXx to USARTx_Tx */
     GPIO_PinAFConfig(uart_info.tx_port, uart_info.tx_pin_source, uart_info.tx_af);
@@ -67,56 +81,29 @@ void f0_uart_init(f0_uart_info_t uart_info, f0_uart_config_t const *p_config)
 
 void f0_uart_put(uint8_t uart_id, char ch)
 {
-
-    if (F0_UART_1 == uart_id)
-    {
-        /* Loop until transmit data register is empty */
-        while (USART_GetFlagStatus(USART2, USART_FLAG_TXE) == RESET)
-        {
-        }
-
-        /* Place your implementation of fputc here */
-        /* e.g. write a character to the USART */
-        USART_SendData(USART2, (uint8_t)ch);
-        return;
-    }
-
-
     /* Loop until transmit data register is empty */
-    while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET)
+    while (USART_GetFlagStatus(m_usart_array[uart_id], USART_FLAG_TXE) == RESET)
     {
     }
 
     /* Place your implementation of fputc here */
     /* e.g. write a character to the USART */
-    USART_SendData(USART1, (uint8_t)ch);
+    USART_SendData(m_usart_array[uart_id], (uint8_t)ch);
 }
 
 uint16_t f0_uart_get(uint8_t uart_id)
 {
     uint16_t data;
 
-    if (F0_UART_1 == uart_id)
-    {
-        /* Loop until receive data register is not empty */
-        while (USART_GetFlagStatus(USART2, USART_FLAG_RXNE) == RESET)
-        {
-        }
-
-        /* Place your implementation of fgetc here */
-        /* e.g. write a character to the USART */
-        data = USART_ReceiveData(USART2);
-        return data;
-    }
-
     /* Loop until receive data register is not empty */
-    while (USART_GetFlagStatus(USART1, USART_FLAG_RXNE) == RESET)
+    while (USART_GetFlagStatus(m_usart_array[uart_id], USART_FLAG_RXNE) == RESET)
     {
     }
 
-    /* Place your implementation of fputc here */
+    /* Place your implementation of fgetc here */
     /* e.g. write a character to the USART */
-    data = USART_ReceiveData(USART1);
+    data = USART_ReceiveData(m_usart_array[uart_id]);
     return data;
+
 }
 
