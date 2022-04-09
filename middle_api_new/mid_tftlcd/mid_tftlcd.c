@@ -41,17 +41,33 @@ int LCD_SetCursor(driver_info_t *p_drv, uint16_t xpos, uint16_t ypos)
 {
     IS_NULL(p_drv);
 
-    if ((xpos > p_drv->lcd_param->width) || (xpos > p_drv->lcd_param->height))
+    if ((xpos > p_drv->lcd_param->width) || (ypos > p_drv->lcd_param->height))
     {
         return -EINVAL;
     }
 
-    p_drv->write_cmd(p_drv->dev, p_drv->lcd_param->setxcmd);
-    p_drv->write_data(p_drv->dev, (xpos >> 8));
-    p_drv->write_data(p_drv->dev, (xpos & 0xff));
-    p_drv->write_cmd(p_drv->dev, p_drv->lcd_param->setycmd);
-    p_drv->write_data(p_drv->dev, (ypos >> 8));
-    p_drv->write_data(p_drv->dev, (ypos & 0xff));
+    lcd_dev_t *lcd_param = p_drv->lcd_param;
+
+    if (lcd_param->id == 0x5510)
+    {
+        p_drv->write_cmd(p_drv->dev, p_drv->lcd_param->setxcmd);
+        p_drv->write_data(p_drv->dev, (xpos >> 8));
+        p_drv->write_cmd(p_drv->dev, p_drv->lcd_param->setxcmd + 1);
+        p_drv->write_data(p_drv->dev, (xpos & 0xff));
+        p_drv->write_cmd(p_drv->dev, p_drv->lcd_param->setycmd);
+        p_drv->write_data(p_drv->dev, (ypos >> 8));
+        p_drv->write_cmd(p_drv->dev, p_drv->lcd_param->setycmd + 1);
+        p_drv->write_data(p_drv->dev, (ypos & 0xff));
+    }
+    else
+    {
+        p_drv->write_cmd(p_drv->dev, p_drv->lcd_param->setxcmd);
+        p_drv->write_data(p_drv->dev, (xpos >> 8));
+        p_drv->write_data(p_drv->dev, (xpos & 0xff));
+        p_drv->write_cmd(p_drv->dev, p_drv->lcd_param->setycmd);
+        p_drv->write_data(p_drv->dev, (ypos >> 8));
+        p_drv->write_data(p_drv->dev, (ypos & 0xff));
+    }
 
     return 0;
 }
@@ -85,11 +101,236 @@ int LCD_WriteRAM(driver_info_t *p_drv, uint16_t color)
 {
     IS_NULL(p_drv);
 
-    p_drv->write_data(p_drv->dev, (color >> 8));
-    p_drv->write_data(p_drv->dev, (color & 0xff));
+    lcd_dev_t *lcd_param = p_drv->lcd_param;
+
+    #if defined CONFIG_FSMC_BUSWIDTH_16B
+        p_drv->write_data(p_drv->dev, color);
+    #elif defined CONFIG_FSMC_BUSWIDTH_8B
+        p_drv->write_data(p_drv->dev, (color >> 8));
+        p_drv->write_data(p_drv->dev, (color & 0xff));
+    #endif
 
     return 0;
 }
+
+/**
+ * @brief   设置LCD扫描方向
+ * 
+ * @param[i] p_drv          驱动设备结构体 
+ * 
+ * @retval null
+ */
+int LCD_Scan_Dir(driver_info_t *p_drv)
+{
+	uint16_t regval=0;
+	uint16_t dirreg=0;
+	uint16_t temp;  
+    uint16_t id = p_drv->lcd_param->id;
+    uint16_t dir = p_drv->lcd_param->dir;
+    uint16_t width = p_drv->lcd_param->width;
+    uint16_t height = p_drv->lcd_param->height;
+    uint16_t setxcmd = p_drv->lcd_param->setxcmd;
+    uint16_t setycmd = p_drv->lcd_param->setxcmd;
+    lcd_drv_t *p_dev = p_drv->dev;
+
+    // 横屏时，对6804和1963不改变扫描方向！竖屏时1963改变方向
+	if (((dir == 1) && (id != 0X6804) && (id != 0X1963))
+        || ((dir == 0) && (id == 0X1963)))
+	{			   
+		switch (dir)//方向转换
+		{
+			case 0 : dir = 6; break;
+			case 1 : dir = 7; break;
+			case 2 : dir = 4; break;
+			case 3 : dir = 5; break;
+			case 4 : dir = 1; break;
+			case 5 : dir = 0; break;
+			case 6 : dir = 3; break;
+			case 7 : dir = 2; break;	     
+		}
+	} 
+
+    // 9341/6804/5310/5510/1963,特殊处理
+	if (id == 0x9341 || id == 0X6804 || id == 0X5310 || id == 0X5510 || id == 0X1963)
+	{
+		switch (dir)
+		{
+            //从左到右,从上到下
+			case L2R_U2D:
+				regval |= (0 << 7)|(0 << 6)|(0 << 5); 
+				break;
+
+            //从左到右,从下到上
+			case L2R_D2U:
+				regval |= (1 << 7)|(0 << 6)|(0 << 5); 
+				break;
+
+            //从右到左,从上到下
+			case R2L_U2D:
+				regval |= (0 << 7)|(1 << 6)|(0 << 5); 
+				break;
+            
+            //从右到左,从下到上
+			case R2L_D2U:
+				regval |= (1 << 7)|(1 << 6)|(0 << 5); 
+				break;
+            
+            //从上到下,从左到右
+			case U2D_L2R:
+				regval |= (0 << 7)|(0 << 6)|(1 << 5); 
+				break;
+            
+            //从上到下,从右到左
+			case U2D_R2L:
+				regval |= (0 << 7)|(1 << 6)|(1 << 5); 
+				break;
+            
+            //从下到上,从左到右
+			case D2U_L2R:
+				regval |= (1 << 7)|(0 << 6)|(1 << 5); 
+				break;
+            
+            //从下到上,从右到左
+			case D2U_R2L:
+				regval |= (1 << 7)|(1 << 6)|(1 << 5); 
+				break;	 
+		}
+
+		if (id == 0X5510)
+        {
+            dirreg = 0X3600;
+        }
+		else
+        {
+            dirreg = 0X36;
+        }
+
+        if ((id !=0X5310 ) && (id != 0X5510) && (id != 0X1963))
+        {
+            // 5310/5510/1963不需要BGR 
+            regval |= 0X08;
+        }  
+
+		if (id == 0X6804)
+        {
+            // 6804的BIT6和9341的反了	 
+            regval |= 0x02;
+        }  
+
+		p_drv->write_reg(p_dev, dirreg, regval);
+
+        // 1963不做坐标处理
+		if (id != 0X1963)
+		{
+			if (regval & 0X20)
+			{
+                //交换X,Y
+				if (width < height)
+				{
+					temp    = width;
+					width   = height;
+					height  = temp;
+				}
+			}
+            else  
+			{
+                //交换X,Y
+				if (width > height)
+				{
+					temp    = width;
+					width   = height;
+					height  = temp;
+				}
+			}  
+		}
+
+		if (id==0X5510)
+		{
+			p_drv->write_cmd(p_dev, setxcmd);
+            p_drv->write_data(p_dev, 0); 
+			p_drv->write_cmd(p_dev, setxcmd+1);
+            p_drv->write_data(p_dev, 0); 
+            p_drv->write_cmd(p_dev, setxcmd+2);
+            p_drv->write_data(p_dev, (width - 1) >> 8);            
+            p_drv->write_cmd(p_dev, setxcmd+3);
+            p_drv->write_data(p_dev, (width - 1) & 0XFF);   
+
+			p_drv->write_cmd(p_dev, setycmd);
+            p_drv->write_data(p_dev, 0); 
+			p_drv->write_cmd(p_dev, setycmd+1);
+            p_drv->write_data(p_dev, 0); 
+            p_drv->write_cmd(p_dev, setycmd+2);
+            p_drv->write_data(p_dev, (height - 1) >> 8);            
+            p_drv->write_cmd(p_dev, setycmd+3);
+            p_drv->write_data(p_dev, (height - 1) & 0XFF);   
+		}
+        else
+		{
+			p_drv->write_cmd(p_dev, setxcmd);
+            p_drv->write_data(p_dev, 0); 
+            p_drv->write_data(p_dev, 0); 
+            p_drv->write_data(p_dev, (width - 1) >> 8);  
+            p_drv->write_data(p_dev, (width - 1) & 0XFF);   
+
+			p_drv->write_cmd(p_dev, setycmd);
+            p_drv->write_data(p_dev, 0); 
+            p_drv->write_data(p_dev, 0); 
+            p_drv->write_data(p_dev, (height - 1) >> 8);  
+            p_drv->write_data(p_dev, (height - 1) & 0XFF);   
+		}
+    }
+    else 
+	{
+		switch(dir)
+		{
+            //从左到右,从上到下
+			case L2R_U2D:
+				regval |= (1<<5)|(1<<4)|(0<<3); 
+				break;
+
+            //从左到右,从下到上
+			case L2R_D2U:
+				regval |= (0<<5)|(1<<4)|(0<<3); 
+				break;
+
+            //从右到左,从上到下
+			case R2L_U2D:
+				regval |= (1<<5)|(0<<4)|(0<<3);
+				break;
+
+            //从右到左,从下到上
+			case R2L_D2U:
+				regval |= (0<<5)|(0<<4)|(0<<3); 
+				break;	 
+            
+            //从上到下,从左到右
+			case U2D_L2R:
+				regval |= (1<<5)|(1<<4)|(1<<3); 
+				break;
+            
+            //从上到下,从右到左
+			case U2D_R2L:
+				regval |= (1<<5)|(0<<4)|(1<<3); 
+				break;
+            
+            //从下到上,从左到右
+			case D2U_L2R:
+				regval |= (0<<5)|(1<<4)|(1<<3); 
+				break;
+
+            //从下到上,从右到左
+			case D2U_R2L:
+				regval |= (0<<5)|(0<<4)|(1<<3); 
+				break;	 
+		} 
+
+		dirreg = 0X03;
+		regval |= 1<<12; 
+		p_drv->write_reg(p_dev, dirreg, regval);
+	}
+
+    return 0;
+}  
 
 /**
  * @brief  清屏
@@ -103,11 +344,14 @@ int LCD_Clear(driver_info_t *p_drv)
     IS_NULL(p_drv);
 
     lcd_dev_t *lcddev = p_drv->lcd_param;
+
+
     uint8_t buf[640];       // TODO: 此处固定大小并不妥，可以通过开辟内存的方式分配空间
 
     LCD_SetCursor(p_drv, 0x00, 0x00);
     LCD_WriteRAM_Prepare(p_drv);
 
+#if defined (CONFIG_CTRL_GPIO)
     for (uint16_t y = 0; y < lcddev->height; y++)
     {
         for (uint16_t x = 0; x < lcddev->width*2; x += 2)
@@ -117,9 +361,71 @@ int LCD_Clear(driver_info_t *p_drv)
         }
         p_drv->write_burst_data(p_drv->dev, buf, lcddev->width * 2);
     }
+#elif defined (CONFIG_CTRL_FSMC)
+    uint32_t i = 0;
+    uint32_t total_point = lcddev->width;
+    total_point *= lcddev->height;
+
+    for (i = 0; i < total_point; i++)
+    {
+        LCD_WriteRAM(p_drv, p_drv->background_color);
+    }
+#endif
 
     return 0;
 }
+
+
+/**
+ * @brief  填充指定区域指定颜色
+ * 
+ * @param[i] p_drv          驱动设备结构体 
+ * @param[i] (sx,sy)        矩形坐标1
+ * @param[i] (ex,ey)        矩形坐标2
+ * @param[i] color          颜色
+ * 
+ * @retval no return
+ */
+int LCD_Fill(driver_info_t *p_drv, fill_area_info_t fill_area)
+{
+    IS_NULL(p_drv);
+
+    if ((fill_area.coord_s.x > p_drv->lcd_param->width) 
+        || (fill_area.coord_s.y > p_drv->lcd_param->height)
+        || (fill_area.coord_e.x > p_drv->lcd_param->width) 
+        || (fill_area.coord_e.y > p_drv->lcd_param->height)
+        || (fill_area.width > p_drv->lcd_param->width))
+    {
+        return -EINVAL;
+    }    
+
+	uint16_t i, j;
+	uint16_t xlen=0;
+    uint8_t buf[320*2];
+
+    for (i = 0; i < (p_drv->lcd_param->width)*2; i += 2)
+    {
+        buf[i] = (fill_area.color >> 8);
+        buf[i+1] = (fill_area.color & 0xff);
+    }
+
+    xlen = fill_area.coord_e.x - fill_area.coord_s.x + 1;	 
+    for (i = fill_area.coord_s.y; i <= fill_area.coord_e.y; i++)
+    {
+        LCD_SetCursor(p_drv, fill_area.coord_s.x, i);      				//设置光标位置 
+        LCD_WriteRAM_Prepare(p_drv);     			                    //开始写入GRAM	
+#if defined (CONFIG_CTRL_GPIO)
+        p_drv->write_burst_data(p_drv->dev, buf, xlen*2); 
+#elif defined (CONFIG_CTRL_FSMC)
+        for (j = 0; j <= xlen; j++)
+        {
+            LCD_WriteRAM(p_drv, fill_area.color);
+        }
+#endif
+    }	 
+
+    return 0;
+} 
 
 /**
  * @brief  画点函数
@@ -163,7 +469,7 @@ int LCD_ShowChar(driver_info_t *p_drv, chars_info_t chars)
     IS_NULL(p_drv);
 
     if ((chars.coord.x > p_drv->lcd_param->width) || (chars.coord.y > p_drv->lcd_param->height)
-        || ((chars.mode != 0) || (chars.mode != 1)))
+        || ((chars.mode != 0) && (chars.mode != 1)))
     {
         return -EINVAL;
     }
@@ -351,51 +657,6 @@ int LCD_ShowNum(driver_info_t *p_drv, number_info_t number)
         chars.num = temp + '0';
         LCD_ShowChar(p_drv, chars); 
 	}
-
-    return 0;
-} 
-
-
-/**
- * @brief  填充指定区域指定颜色
- * 
- * @param[i] p_drv          驱动设备结构体 
- * @param[i] (sx,sy)        矩形坐标1
- * @param[i] (ex,ey)        矩形坐标2
- * @param[i] color          颜色
- * 
- * @retval no return
- */
-int LCD_Fill(driver_info_t *p_drv, fill_area_info_t fill_area)
-{
-    IS_NULL(p_drv);
-
-    if ((fill_area.coord_s.x > p_drv->lcd_param->width) 
-        || (fill_area.coord_s.y > p_drv->lcd_param->height)
-        || (fill_area.coord_e.x > p_drv->lcd_param->width) 
-        || (fill_area.coord_e.y > p_drv->lcd_param->height)
-        || (fill_area.width > p_drv->lcd_param->width))
-    {
-        return -EINVAL;
-    }    
-    
-	uint16_t i;
-	uint16_t xlen=0;
-    uint8_t buf[320*2];
-
-    for (i = 0; i < (p_drv->lcd_param->width)*2; i += 2)
-    {
-        buf[i] = (fill_area.color >> 8);
-        buf[i+1] = (fill_area.color & 0xff);
-    }
-
-    xlen = fill_area.coord_e.x - fill_area.coord_s.x + 1;	 
-    for (i = fill_area.coord_s.y; i <= fill_area.coord_e.y; i++)
-    {
-        LCD_SetCursor(p_drv, fill_area.coord_s.x, i);      				//设置光标位置 
-        LCD_WriteRAM_Prepare(p_drv);     			//开始写入GRAM	
-        p_drv->write_burst_data(p_drv->dev, buf, xlen*2); 
-    }	 
 
     return 0;
 } 
@@ -714,7 +975,6 @@ int LCD_DrawTriangle(driver_info_t *p_drv, triangle_info_t triangle)
     } 
 
     // 三个坐标(x, y), (x+base, y), (x+base, y-height)
-    lcd_dev_t *lcddev = p_drv->lcd_param;
     line_info_t line;
 
     line.width = 1;
