@@ -3,15 +3,19 @@
 
 #ifdef F0
 #include "f0_usart.h"
+#elif defined F1
+#include "f1_usart.h"
 #endif
 
 typedef struct
 {
-    uint8_t id;
-
+#ifdef F0
     f0_uart_info_t *uart_info;
-
     f0_uart_config_t *uart_config;
+#elif defined F1
+    f1_uart_info_t *uart_info;
+    f1_uart_config_t *uart_config;
+#endif
 }usart_object_t;
 
 int usart_init(usart_object_t *p_usart_object);

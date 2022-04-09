@@ -32,7 +32,7 @@ void adc_init(void)
 
 uint16_t adc_ch_result_get(uint32_t channel)
 {
-#ifdef F0
+#ifdef FT32
     return adc_ch_value_get(channel);
 #endif
 }

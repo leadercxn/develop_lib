@@ -12,6 +12,8 @@ int usart_init(usart_object_t *p_usart_object)
 
 #ifdef F0
     f0_uart_init(*(p_usart_object->uart_info), p_usart_object->uart_config);
+#elif F1
+    f1_uart_init(*(p_usart_object->uart_info), p_usart_object->uart_config);
 #endif
 
     return err_code;
@@ -27,7 +29,9 @@ int usart_put_char(usart_object_t *p_usart_object, char ch)
     int err_code = 0;
 
 #ifdef F0
-    f0_uart_put(p_usart_object->id, ch);
+    f0_uart_put(p_usart_object->uart_info->uart_id, ch);
+#elif F1
+    f1_uart_put(p_usart_object->uart_info->uart_id, ch);
 #endif
 
     return err_code;
@@ -42,12 +46,14 @@ int usart_put_string(usart_object_t *p_usart_object, const char *s)
 
     int err_code = 0;
 
-#ifdef F0
     while (*s != '\0')
     {
-        f0_uart_put(p_usart_object->id, *s++);
+    #ifdef F0
+        f0_uart_put(p_usart_object->uart_info->uart_id, *s++);
+    #elif defined F1
+        f1_uart_put(p_usart_object->uart_info->uart_id, *s++);
+    #endif
     }
-#endif
 
     return err_code;
 }
@@ -63,7 +69,9 @@ uint16_t usart_get_char(usart_object_t *p_usart_object)
     uint16_t data;
 
 #ifdef F0
-    data = f0_uart_get(p_usart_object->id);
+    data = f0_uart_get(p_usart_object->uart_info->uart_id);
+#elif defined F1
+    data = f1_uart_get(p_usart_object->uart_info->uart_id);
 #endif
 
     return data;
