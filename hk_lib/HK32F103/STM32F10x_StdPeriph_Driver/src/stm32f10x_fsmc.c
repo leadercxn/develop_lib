@@ -479,12 +479,12 @@ void FSMC_NORSRAMCmd(uint32_t FSMC_Bank, FunctionalState NewState)
   
   if (NewState != DISABLE)
   {
-    /* Enable the selected NOR/SRAM Bank by setting the PBKEN bit in the BCRx register */
+    /* Enable the selected NOR/SRAM Bank by setting the MBKEN bit in the BCRx register */
     FSMC_Bank1->BTCR[FSMC_Bank] |= BCR_MBKEN_Set;
   }
   else
   {
-    /* Disable the selected NOR/SRAM Bank by clearing the PBKEN bit in the BCRx register */
+    /* Disable the selected NOR/SRAM Bank by clearing the MBKEN bit in the BCRx register */
     FSMC_Bank1->BTCR[FSMC_Bank] &= BCR_MBKEN_Reset;
   }
 }
