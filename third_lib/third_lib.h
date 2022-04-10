@@ -6,6 +6,8 @@
 #include "crc32.h"
 #include "ntshell.h"
 #include "ntlibc.h"
+#include "ntopt.h"
+#include "shell.h"          
 #include "queue.h"
 
 #endif

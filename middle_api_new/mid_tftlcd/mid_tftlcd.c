@@ -101,8 +101,6 @@ int LCD_WriteRAM(driver_info_t *p_drv, uint16_t color)
 {
     IS_NULL(p_drv);
 
-    lcd_dev_t *lcd_param = p_drv->lcd_param;
-
     #if defined CONFIG_FSMC_BUSWIDTH_16B
         p_drv->write_data(p_drv->dev, color);
     #elif defined CONFIG_FSMC_BUSWIDTH_8B

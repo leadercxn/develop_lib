@@ -58,14 +58,13 @@ int usart_put_string(usart_object_t *p_usart_object, const char *s)
     return err_code;
 }
 
-uint16_t usart_get_char(usart_object_t *p_usart_object)
+int usart_get_char(usart_object_t *p_usart_object)
 {
     if (!p_usart_object)
     {
         return -EINVAL;
     }
 
-    int err_code = 0;
     uint16_t data;
 
 #ifdef F0
@@ -77,5 +76,28 @@ uint16_t usart_get_char(usart_object_t *p_usart_object)
     return data;
 }
 
+int usart_get_chars(usart_object_t *p_usart_object, uint8_t *buf, uint8_t len)
+{
+    uint8_t i = 0;
+
+    for (i = 0; i < len; i++)
+    {
+        buf[i] = usart_get_char(p_usart_object);
+    }
+	
+	return 0;
+}
+
+int usart_put_chars(usart_object_t *p_usart_object, uint8_t *buf, uint8_t len)
+{
+    uint8_t i = 0;
+
+    for (i = 0; i < len; i++)
+    {
+        usart_put_char(p_usart_object, buf[i]);
+    }
+	
+	return 0;
+}
 
 

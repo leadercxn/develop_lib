@@ -11,5 +11,13 @@ void mid_system_tick_init(void)
 #endif
 }
 
+int mid_get_systick(void)
+{
+#ifdef F0
+    // f0_systick_init();
+#elif defined F1
+    return f1_get_systick();
+#endif
+}
 
 

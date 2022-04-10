@@ -24,7 +24,11 @@ int usart_put_char(usart_object_t *p_usart_object, char ch);
 
 int usart_put_string(usart_object_t *p_usart_object, const char *s);
 
-uint16_t usart_get_char(usart_object_t *p_usart_object);
+int usart_get_char(usart_object_t *p_usart_object);
+
+int usart_get_chars(usart_object_t *p_usart_object, uint8_t *buf, uint8_t len);
+
+int usart_put_chars(usart_object_t *p_usart_object, uint8_t *buf, uint8_t len);
 
 
 #endif
